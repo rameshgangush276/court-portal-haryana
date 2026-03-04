@@ -1,0 +1,41 @@
+{
+  "name": "court-portal-antigravity",
+  "version": "1.0.0",
+  "description": "Court Portal - Data Entry System for Naib Courts in Haryana",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "nodemon server/index.js",
+    "client": "npm run dev --prefix client",
+    "start": "node server/index.js",
+    "db:migrate": "npx prisma migrate dev",
+    "db:seed": "node prisma/seed.js",
+    "db:studio": "npx prisma studio",
+    "db:generate": "npx prisma generate",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@prisma/client": "^6.19.2",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.1",
+    "node-cron": "^4.2.1",
+    "prisma": "^6.19.2"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "nodemon": "^3.1.14"
+  }
+}
