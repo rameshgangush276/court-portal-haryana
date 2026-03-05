@@ -109,16 +109,18 @@ router.post('/', authenticate, requireRole('naib_court'), async (req, res, next)
         }
 
         // Validate date: only today or yesterday
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        const entryDateObj = entryDate ? new Date(entryDate) : today;
-        entryDateObj.setHours(0, 0, 0, 0);
+        const todayStr = new Date().toLocaleDateString('en-CA');
+        const yest = new Date();
+        yest.setDate(yest.getDate() - 1);
+        const yesterdayStr = yest.toLocaleDateString('en-CA');
 
-        if (entryDateObj.getTime() !== today.getTime() && entryDateObj.getTime() !== yesterday.getTime()) {
+        const reqDateStr = entryDate || todayStr;
+
+        if (reqDateStr !== todayStr && reqDateStr !== yesterdayStr) {
             return res.status(400).json({ error: 'Entry date must be today or yesterday' });
         }
+
+        const entryDateObj = new Date(reqDateStr); // Will be UTC midnight
 
         // Verify court is in naib's district
         const court = await prisma.court.findFirst({
@@ -192,11 +194,10 @@ router.put('/:id', authenticate, requireRole('naib_court', 'district_admin', 'de
         if (!entry) return res.status(404).json({ error: 'Entry not found' });
 
         // Check edit window
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const entryDate = new Date(entry.entryDate);
-        entryDate.setHours(0, 0, 0, 0);
-        const daysDiff = Math.floor((today - entryDate) / (1000 * 60 * 60 * 24));
+        const todayStr = new Date().toLocaleDateString('en-CA');
+        const localToday = new Date(todayStr); // UTC midnight of today
+        const entryDateObj = new Date(entry.entryDate); // Prisma Date is UTC midnight
+        const daysDiff = Math.floor((localToday - entryDateObj) / (1000 * 60 * 60 * 24));
 
         if (req.user.role === 'naib_court' && daysDiff > 1) {
             return res.status(403).json({ error: 'Naib courts can only edit data from today and yesterday' });
@@ -241,11 +242,10 @@ router.delete('/:id', authenticate, requireRole('naib_court', 'district_admin', 
         if (!entry) return res.status(404).json({ error: 'Entry not found' });
 
         // Check edit/delete window (same as PUT)
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const entryDate = new Date(entry.entryDate);
-        entryDate.setHours(0, 0, 0, 0);
-        const daysDiff = Math.floor((today - entryDate) / (1000 * 60 * 60 * 24));
+        const todayStr = new Date().toLocaleDateString('en-CA');
+        const localToday = new Date(todayStr);
+        const entryDateObj = new Date(entry.entryDate);
+        const daysDiff = Math.floor((localToday - entryDateObj) / (1000 * 60 * 60 * 24));
 
         if (req.user.role === 'naib_court' && daysDiff > 1) {
             return res.status(403).json({ error: 'Naib courts can only delete data from today and yesterday' });
