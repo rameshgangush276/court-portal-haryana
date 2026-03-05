@@ -40,7 +40,7 @@ function RoleRedirect() {
     developer: '/dev',
     state_admin: '/state',
     district_admin: '/district',
-    naib_court: '/naib',
+    naib_court: '/naib/select-court',
     viewer_district: '/viewer',
     viewer_state: '/viewer',
   };
@@ -93,10 +93,9 @@ function App() {
 
           {/* Naib Court Routes */}
           <Route element={<PrivateRoute roles={['naib_court']}><Layout /></PrivateRoute>}>
-            <Route path="/naib" element={<NaibDataEntry />} />
+            <Route path="/naib" element={<Navigate to="/naib/select-court" replace />} />
             <Route path="/naib/select-court" element={<NaibDataEntry />} />
             <Route path="/naib/entry" element={<NaibDataEntry />} />
-            <Route path="/naib/history" element={<ReportsPage />} />
             <Route path="/naib/grievances" element={<GrievancesPage />} />
             <Route path="/naib/reports" element={<ReportsPage />} />
           </Route>

@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
 
 export default function NaibDashboard() {
     const { user } = useAuth();
+    const location = useLocation();
+    const navigate = useNavigate();
+    const isSelectCourtPage = location.pathname.includes('select-court');
+
     const [courts, setCourts] = useState([]);
     const [selectedCourt, setSelectedCourt] = useState(user?.lastSelectedCourtId || '');
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -139,13 +144,13 @@ export default function NaibDashboard() {
 
     return (
         <div>
-            {!activeTable ? (
-                <>
-                    <div className="page-header">
-                        <h2>📝 Data Entry</h2>
-                    </div>
+            <div className="page-header">
+                <h2>{isSelectCourtPage ? '⚖️ Select Court' : '📝 Data Entry'}</h2>
+            </div>
 
-                    {/* Court & Date Selection */}
+            {isSelectCourtPage ? (
+                <>
+                    {/* Court & Date Selection Only */}
                     <div className="card mb-xl">
                         <div className="form-row">
                             <div className="form-group">
@@ -165,20 +170,35 @@ export default function NaibDashboard() {
                                 </select>
                             </div>
                         </div>
-                        {courtName && (
-                            <div style={{ color: 'var(--color-success)', fontSize: 'var(--font-size-sm)', fontWeight: 600 }}>
-                                ✅ Selected: {courtName} | Date: {selectedDate}
-                            </div>
-                        )}
                     </div>
 
-                    {!selectedCourt ? (
-                        <div className="empty-state">
-                            <div className="icon">⚖️</div>
-                            <h3>Select a Court</h3>
-                            <p>Choose a court from the dropdown above to start data entry</p>
+                    {selectedCourt && (
+                        <button
+                            className="btn btn-primary"
+                            style={{ width: '100%', padding: 'var(--space-md) var(--space-lg)', fontSize: '1.1rem', marginTop: 'var(--space-lg)' }}
+                            onClick={() => navigate('/naib/entry')}
+                        >
+                            Proceed to Data Entry ➔
+                        </button>
+                    )}
+                </>
+            ) : (
+                /* Data Entry Tab */
+                !selectedCourt ? (
+                    <div className="empty-state">
+                        <div className="icon">⚖️</div>
+                        <h3>No Court Selected</h3>
+                        <p>Please select a court and date first to begin entering data.</p>
+                        <button className="btn btn-primary mt-lg" onClick={() => navigate('/naib/select-court')}>Go to Select Court</button>
+                    </div>
+                ) : !activeTable ? (
+                    <>
+                        <div className="card mb-xl" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
+                            <div style={{ display: 'flex', gap: 'var(--space-lg)', fontSize: 'var(--font-size-sm)', fontWeight: 600, flexWrap: 'wrap' }}>
+                                <span style={{ color: 'var(--color-primary)' }}>📍 {courtName}</span>
+                                <span style={{ color: 'var(--color-success)' }}>📅 {selectedDate}</span>
+                            </div>
                         </div>
-                    ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)', marginBottom: 'var(--space-xl)' }}>
                             <div style={{ marginBottom: 'var(--space-sm)', fontWeight: 600, color: 'var(--color-text-secondary)' }}>
                                 Select a table below:
@@ -217,98 +237,98 @@ export default function NaibDashboard() {
                                 </button>
                             ))}
                         </div>
-                    )}
-                </>
-            ) : (
-                <>
-                    {/* Active Table Screen */}
-                    <div className="page-header" style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'center' }}>
-                        <button
-                            className="btn btn-secondary btn-sm"
-                            onClick={() => { setActiveTable(null); setEditingEntry(null); setError(''); setSuccess(''); }}
-                        >
-                            ← Back
-                        </button>
-                        <h2 style={{ margin: 0, fontSize: '1.25rem', lineHeight: 1.2 }}>{activeTable.name}</h2>
-                    </div>
-
-                    <div className="card mb-xl" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
-                        <div style={{ display: 'flex', gap: 'var(--space-lg)', fontSize: 'var(--font-size-sm)', fontWeight: 600, flexWrap: 'wrap' }}>
-                            <span style={{ color: 'var(--color-primary)' }}>📍 {courtName}</span>
-                            <span style={{ color: 'var(--color-success)' }}>📅 {selectedDate}</span>
+                    </>
+                ) : (
+                    <>
+                        {/* Active Table Screen */}
+                        <div className="page-header" style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'center' }}>
+                            <button
+                                className="btn btn-secondary btn-sm"
+                                onClick={() => { setActiveTable(null); setEditingEntry(null); setError(''); setSuccess(''); }}
+                            >
+                                ← Back
+                            </button>
+                            <h2 style={{ margin: 0, fontSize: '1.25rem', lineHeight: 1.2 }}>{activeTable.name}</h2>
                         </div>
-                    </div>
 
-                    {/* Success / Error */}
-                    {success && <div style={{ background: 'rgba(34,197,94,0.15)', color: 'var(--color-success)', padding: 'var(--space-md) var(--space-lg)', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-lg)', fontSize: 'var(--font-size-sm)' }}>{success}</div>}
-                    {error && <div style={{ background: 'var(--color-danger-soft)', color: 'var(--color-danger)', padding: 'var(--space-md) var(--space-lg)', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-lg)', fontSize: 'var(--font-size-sm)' }}>{error}</div>}
+                        <div className="card mb-xl" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
+                            <div style={{ display: 'flex', gap: 'var(--space-lg)', fontSize: 'var(--font-size-sm)', fontWeight: 600, flexWrap: 'wrap' }}>
+                                <span style={{ color: 'var(--color-primary)' }}>📍 {courtName}</span>
+                                <span style={{ color: 'var(--color-success)' }}>📅 {selectedDate}</span>
+                            </div>
+                        </div>
 
-                    {/* Entry Form */}
-                    {editingEntry !== null && (
-                        <div className="card mb-xl">
-                            <h3 className="card-title mb-lg">{editingEntry === 'new' ? 'New Entry' : 'Edit Entry'}</h3>
-                            <div className="form-row">
-                                {activeTable.columns.map(col => (
-                                    <div className="form-group" key={col.id}>
-                                        <label className="form-label">
-                                            {col.name} {col.isRequired && <span className="text-danger">*</span>}
-                                        </label>
-                                        {renderField(col)}
+                        {/* Success / Error */}
+                        {success && <div style={{ background: 'rgba(34,197,94,0.15)', color: 'var(--color-success)', padding: 'var(--space-md) var(--space-lg)', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-lg)', fontSize: 'var(--font-size-sm)' }}>{success}</div>}
+                        {error && <div style={{ background: 'var(--color-danger-soft)', color: 'var(--color-danger)', padding: 'var(--space-md) var(--space-lg)', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-lg)', fontSize: 'var(--font-size-sm)' }}>{error}</div>}
+
+                        {/* Entry Form */}
+                        {editingEntry !== null && (
+                            <div className="card mb-xl">
+                                <h3 className="card-title mb-lg">{editingEntry === 'new' ? 'New Entry' : 'Edit Entry'}</h3>
+                                <div className="form-row">
+                                    {activeTable.columns.map(col => (
+                                        <div className="form-group" key={col.id}>
+                                            <label className="form-label">
+                                                {col.name} {col.isRequired && <span className="text-danger">*</span>}
+                                            </label>
+                                            {renderField(col)}
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="flex gap-md">
+                                    <button className="btn btn-primary" onClick={handleSave}>💾 Save</button>
+                                    <button className="btn btn-secondary" onClick={() => setEditingEntry(null)}>Cancel</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Action Bar */}
+                        {editingEntry === null && (
+                            <div className="mb-lg">
+                                {!(activeTable.singleRow && entries.length > 0) && (
+                                    <button className="btn btn-primary" onClick={handleNewEntry}>+ Add Entry</button>
+                                )}
+                                {activeTable.singleRow && entries.length > 0 && (
+                                    <button className="btn btn-primary" onClick={() => handleEditEntry(entries[0])}>✏️ Edit Entry</button>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Entries List (Mobile-friendly Cards) */}
+                        {entries.length > 0 && editingEntry === null && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+                                {entries.map((entry, index) => (
+                                    <div key={entry.id} className="card" style={{ padding: 'var(--space-md)' }}>
+                                        <div style={{ paddingBottom: 'var(--space-sm)', borderBottom: '1px solid var(--color-border)', marginBottom: 'var(--space-sm)', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span>Entry #{index + 1}</span>
+                                            <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
+                                                <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={() => handleEditEntry(entry)}>✏️ Edit</button>
+                                                <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '12px', color: 'var(--color-danger)', borderColor: 'var(--color-danger-soft)', background: 'var(--color-danger-soft)' }} onClick={() => handleDeleteEntry(entry.id)}>🗑️ Delete</button>
+                                            </div>
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 'var(--space-sm)', fontSize: 'var(--font-size-sm)' }}>
+                                            {activeTable.columns.map(col => (
+                                                <div key={col.id}>
+                                                    <div style={{ color: 'var(--color-text-secondary)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{col.name}</div>
+                                                    <div style={{ fontWeight: 500 }}>{entry.values?.[col.slug] ?? '—'}</div>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
-                            <div className="flex gap-md">
-                                <button className="btn btn-primary" onClick={handleSave}>💾 Save</button>
-                                <button className="btn btn-secondary" onClick={() => setEditingEntry(null)}>Cancel</button>
+                        )}
+
+                        {entries.length === 0 && editingEntry === null && (
+                            <div className="empty-state">
+                                <div className="icon">📋</div>
+                                <h3>No entries yet</h3>
+                                <p>Click "Add Entry" to start filling data for this table</p>
                             </div>
-                        </div>
-                    )}
-
-                    {/* Action Bar */}
-                    {editingEntry === null && (
-                        <div className="mb-lg">
-                            {!(activeTable.singleRow && entries.length > 0) && (
-                                <button className="btn btn-primary" onClick={handleNewEntry}>+ Add Entry</button>
-                            )}
-                            {activeTable.singleRow && entries.length > 0 && (
-                                <button className="btn btn-primary" onClick={() => handleEditEntry(entries[0])}>✏️ Edit Entry</button>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Entries List (Mobile-friendly Cards) */}
-                    {entries.length > 0 && editingEntry === null && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-                            {entries.map((entry, index) => (
-                                <div key={entry.id} className="card" style={{ padding: 'var(--space-md)' }}>
-                                    <div style={{ paddingBottom: 'var(--space-sm)', borderBottom: '1px solid var(--color-border)', marginBottom: 'var(--space-sm)', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span>Entry #{index + 1}</span>
-                                        <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
-                                            <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={() => handleEditEntry(entry)}>✏️ Edit</button>
-                                            <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '12px', color: 'var(--color-danger)', borderColor: 'var(--color-danger-soft)', background: 'var(--color-danger-soft)' }} onClick={() => handleDeleteEntry(entry.id)}>🗑️ Delete</button>
-                                        </div>
-                                    </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 'var(--space-sm)', fontSize: 'var(--font-size-sm)' }}>
-                                        {activeTable.columns.map(col => (
-                                            <div key={col.id}>
-                                                <div style={{ color: 'var(--color-text-secondary)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{col.name}</div>
-                                                <div style={{ fontWeight: 500 }}>{entry.values?.[col.slug] ?? '—'}</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    {entries.length === 0 && editingEntry === null && (
-                        <div className="empty-state">
-                            <div className="icon">📋</div>
-                            <h3>No entries yet</h3>
-                            <p>Click "Add Entry" to start filling data for this table</p>
-                        </div>
-                    )}
-                </>
+                        )}
+                    </>
+                )
             )}
         </div>
     );

@@ -73,12 +73,10 @@ const navConfig = {
     naib_court: {
         label: 'Naib Court',
         sections: [
-            { label: 'Overview', items: [{ to: '/naib', icon: '📊', text: 'Dashboard' }] },
             {
                 label: 'Data Entry', items: [
                     { to: '/naib/select-court', icon: '⚖️', text: 'Select Court' },
                     { to: '/naib/entry', icon: '📝', text: 'Data Entry' },
-                    { to: '/naib/history', icon: '📜', text: 'History' },
                 ],
             },
             {
