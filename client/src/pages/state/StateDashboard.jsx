@@ -41,7 +41,7 @@ export default function StateDashboard() {
                 <div className="stat-card">
                     <div className="stat-icon">👨‍⚖️</div>
                     <div className="stat-value">{stats?.magistrates ?? '—'}</div>
-                    <div className="stat-label">Magistrates</div>
+                    <div className="stat-label">Judicial Officers</div>
                 </div>
                 <div className="stat-card">
                     <div className="stat-icon">🎫</div>
@@ -58,7 +58,7 @@ export default function StateDashboard() {
                 <div className="card-header"><div className="card-title">Quick Actions</div></div>
                 <div className="flex gap-md" style={{ flexWrap: 'wrap' }}>
                     <a className="btn btn-primary" href="/state/districts">Manage Districts</a>
-                    <a className="btn btn-secondary" href="/state/magistrates">Manage Magistrates</a>
+                    <a className="btn btn-secondary" href="/state/magistrates">Manage Judicial Officers</a>
                     <a className="btn btn-secondary" href="/state/alerts">View Alerts</a>
                     <a className="btn btn-secondary" href="/state/grievances">Grievances</a>
                     <a className="btn btn-secondary" href="/state/reports">Reports</a>

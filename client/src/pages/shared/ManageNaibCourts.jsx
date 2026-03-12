@@ -11,15 +11,19 @@ export default function ManageNaibCourts() {
     const [editItem, setEditItem] = useState(null);
     const [form, setForm] = useState({ username: '', password: '', name: '', districtId: '', phone: '' });
     const [transferTo, setTransferTo] = useState('');
+    const [filterDistrict, setFilterDistrict] = useState('');
     const [error, setError] = useState('');
 
     const canTransfer = ['developer', 'state_admin'].includes(user.role);
 
-    const load = () => api.get('/naib-courts').then(d => setNaibCourts(d.naibCourts)).catch(console.error);
+    const load = () => {
+        const params = filterDistrict ? `?districtId=${filterDistrict}` : '';
+        api.get(`/naib-courts${params}`).then(d => setNaibCourts(d.naibCourts)).catch(console.error);
+    };
     useEffect(() => {
-        load();
         api.get('/districts').then(d => setDistricts(d.districts)).catch(console.error);
     }, []);
+    useEffect(() => { load(); }, [filterDistrict]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -52,10 +56,19 @@ export default function ManageNaibCourts() {
         <div>
             <div className="page-header">
                 <h2>Manage Naib Courts</h2>
-                <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditItem(null); setForm({ username: '', password: '', name: '', districtId: user.districtId || '', phone: '' }); }}>
+                <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditItem(null); setForm({ username: '', password: '', name: '', districtId: user.districtId || filterDistrict || '', phone: '' }); }}>
                     + Add Naib Court
                 </button>
             </div>
+
+            {canTransfer && (
+                <div className="mb-xl">
+                    <select className="form-select" style={{ maxWidth: 300 }} value={filterDistrict} onChange={e => setFilterDistrict(e.target.value)}>
+                        <option value="">All Districts</option>
+                        {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    </select>
+                </div>
+            )}
 
             {showForm && (
                 <div className="card mb-xl">
@@ -100,18 +113,19 @@ export default function ManageNaibCourts() {
             <div className="data-table-wrapper">
                 <table className="data-table">
                     <thead>
-                        <tr><th>Username</th><th>Name</th><th>District</th><th>Last Court</th><th>Actions</th></tr>
+                        <tr><th>S.No.</th><th>Username</th><th>Name</th><th>District</th><th>Last Court</th><th>Actions</th></tr>
                     </thead>
                     <tbody>
-                        {naibCourts.map(n => (
+                        {naibCourts.map((n, idx) => (
                             <tr key={n.id}>
+                                <td data-label="S.No.">{idx + 1}</td>
                                 <td data-label="Username">{n.username}</td>
                                 <td data-label="Name">{n.name}</td>
                                 <td data-label="District">{n.district?.name || '—'}</td>
                                 <td data-label="Last Court">{n.lastSelectedCourt?.name || <span className="text-muted">None</span>}</td>
                                 <td data-label="Actions">
                                     <div className="flex gap-sm" style={{ flexWrap: 'wrap' }}>
-                                        <button className="btn btn-secondary btn-sm" onClick={() => { setEditItem(n); setForm({ username: n.username, password: '', name: n.name, districtId: n.districtId || '', phone: n.phone || '' }); setShowForm(true); }}>Edit</button>
+                                        <button className="btn btn-secondary btn-sm" onClick={() => { setEditItem(n); setForm({ username: n.username, password: '', name: n.name, districtId: n.districtId || '', phone: n.phone || '' }); setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Edit</button>
                                         {canTransfer && (
                                             showTransfer === n.id ? (
                                                 <div className="flex gap-sm">

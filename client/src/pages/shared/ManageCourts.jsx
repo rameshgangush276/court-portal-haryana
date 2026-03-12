@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
 
 export default function ManageCourts() {
+    const { user } = useAuth();
     const [courts, setCourts] = useState([]);
     const [districts, setDistricts] = useState([]);
     const [magistrates, setMagistrates] = useState([]);
@@ -41,6 +43,7 @@ export default function ManageCourts() {
         setEditItem(c);
         setForm({ districtId: c.districtId, name: c.name, courtNo: c.courtNo });
         setShowForm(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleDelete = async (id) => {
@@ -53,17 +56,19 @@ export default function ManageCourts() {
         <div>
             <div className="page-header">
                 <h2>Manage Courts</h2>
-                <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditItem(null); setForm({ districtId: filterDistrict || '', name: '', courtNo: '' }); }}>
+                <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditItem(null); setForm({ districtId: user.districtId || filterDistrict || '', name: '', courtNo: '' }); }}>
                     + Add Court
                 </button>
             </div>
 
-            <div className="mb-xl">
-                <select className="form-select" style={{ maxWidth: 300 }} value={filterDistrict} onChange={e => setFilterDistrict(e.target.value)}>
-                    <option value="">All Districts</option>
-                    {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
-            </div>
+            {['developer', 'state_admin'].includes(user.role) && (
+                <div className="mb-xl">
+                    <select className="form-select" style={{ maxWidth: 300 }} value={filterDistrict} onChange={e => setFilterDistrict(e.target.value)}>
+                        <option value="">All Districts</option>
+                        {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    </select>
+                </div>
+            )}
 
             {showForm && (
                 <div className="card mb-xl">
@@ -83,7 +88,7 @@ export default function ManageCourts() {
                                 <input className="form-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Court No</label>
+                                <label className="form-label">Court ID</label>
                                 <input className="form-input" value={form.courtNo} onChange={e => setForm({ ...form, courtNo: e.target.value })} required />
                             </div>
                         </div>
@@ -99,20 +104,22 @@ export default function ManageCourts() {
                 <table className="data-table">
                     <thead>
                         <tr>
-                            <th>Court No</th>
+                            <th>S.No.</th>
+                            <th>Court ID</th>
                             <th>Name</th>
                             <th>District</th>
-                            <th>Magistrate</th>
+                            <th>Judicial Officer</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {courts.map(c => (
+                        {courts.map((c, idx) => (
                             <tr key={c.id}>
-                                <td data-label="Court No"><span className="badge badge-secondary">{c.courtNo}</span></td>
+                                <td data-label="S.No.">{idx + 1}</td>
+                                <td data-label="Court ID"><span className="badge badge-secondary">{c.courtNo}</span></td>
                                 <td data-label="Name">{c.name}</td>
                                 <td data-label="District">{c.district?.name}</td>
-                                <td data-label="Magistrate">{c.magistrate ? c.magistrate.name : <span className="text-muted">Not assigned</span>}</td>
+                                <td data-label="Judicial Officer">{c.magistrate ? c.magistrate.name : <span className="text-muted">Not assigned</span>}</td>
                                 <td data-label="Actions">
                                     <div className="flex gap-sm">
                                         <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(c)}>Edit</button>
@@ -122,7 +129,7 @@ export default function ManageCourts() {
                             </tr>
                         ))}
                         {courts.length === 0 && (
-                            <tr><td colSpan="5" className="text-center text-muted">No courts found</td></tr>
+                            <tr><td colSpan="6" className="text-center text-muted">No courts found</td></tr>
                         )}
                     </tbody>
                 </table>

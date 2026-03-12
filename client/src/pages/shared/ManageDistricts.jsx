@@ -31,6 +31,7 @@ export default function ManageDistricts() {
         setEditItem(d);
         setForm({ name: d.name, code: d.code });
         setShowForm(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleDelete = async (id) => {
@@ -75,16 +76,16 @@ export default function ManageDistricts() {
                 <table className="data-table">
                     <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>S.No.</th>
                             <th>Name</th>
                             <th>Code</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {districts.map(d => (
+                        {districts.map((d, idx) => (
                             <tr key={d.id}>
-                                <td data-label="ID">{d.id}</td>
+                                <td data-label="S.No.">{idx + 1}</td>
                                 <td data-label="Name">{d.name}</td>
                                 <td data-label="Code"><span className="badge badge-primary">{d.code}</span></td>
                                 <td data-label="Actions">

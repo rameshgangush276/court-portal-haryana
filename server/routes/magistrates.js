@@ -28,7 +28,7 @@ router.get('/', authenticate, async (req, res, next) => {
 // POST /api/v1/magistrates
 router.post('/', authenticate, requireRole('developer', 'state_admin'), async (req, res, next) => {
     try {
-        const { name, designation, districtId, phone } = req.body;
+        const { name, designation, gender, districtId, phone } = req.body;
         if (!name || !designation) {
             return res.status(400).json({ error: 'Name and designation are required' });
         }
@@ -37,6 +37,7 @@ router.post('/', authenticate, requireRole('developer', 'state_admin'), async (r
             data: {
                 name,
                 designation,
+                gender: gender || null,
                 districtId: districtId ? parseInt(districtId) : null,
                 phone,
             },
@@ -48,10 +49,11 @@ router.post('/', authenticate, requireRole('developer', 'state_admin'), async (r
 // PUT /api/v1/magistrates/:id
 router.put('/:id', authenticate, requireRole('developer', 'state_admin'), async (req, res, next) => {
     try {
-        const { name, designation, phone } = req.body;
+        const { name, designation, gender, phone } = req.body;
         const data = {};
         if (name) data.name = name;
         if (designation) data.designation = designation;
+        if (gender !== undefined) data.gender = gender || null;
         if (phone !== undefined) data.phone = phone;
 
         const magistrate = await prisma.magistrate.update({

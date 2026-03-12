@@ -69,6 +69,7 @@ model Court {
   districtId   Int       @map("district_id")
   name         String    @db.VarChar(150)
   courtNo      String    @db.VarChar(20) @map("court_no")
+  cisNumber    String?   @db.VarChar(50) @map("cis_number")
   magistrateId Int?      @map("magistrate_id")
   createdAt    DateTime  @default(now()) @map("created_at")
   deletedAt    DateTime? @map("deleted_at")
@@ -88,6 +89,7 @@ model Magistrate {
   id          Int       @id @default(autoincrement())
   name        String    @db.VarChar(150)
   designation String    @db.VarChar(100)
+  gender      String?   @db.VarChar(10)
   districtId  Int?      @map("district_id")
   phone       String?   @db.VarChar(15)
   createdAt   DateTime  @default(now()) @map("created_at")
@@ -108,6 +110,7 @@ model User {
   passwordHash          String    @map("password_hash")
   name                  String    @db.VarChar(150)
   role                  UserRole
+  rank                  String?   @db.VarChar(50)
   districtId            Int?      @map("district_id")
   phone                 String?   @db.VarChar(15)
   lastSelectedCourtId   Int?      @map("last_selected_court_id")

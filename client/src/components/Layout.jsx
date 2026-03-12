@@ -11,7 +11,7 @@ const navConfig = {
                 label: 'Management', items: [
                     { to: '/dev/districts', icon: '🏛️', text: 'Districts' },
                     { to: '/dev/courts', icon: '⚖️', text: 'Courts' },
-                    { to: '/dev/magistrates', icon: '👨‍⚖️', text: 'Magistrates' },
+                    { to: '/dev/magistrates', icon: '👨‍⚖️', text: 'Judicial Officers' },
                     { to: '/dev/naib-courts', icon: '👤', text: 'Naib Courts' },
                     { to: '/dev/data-tables', icon: '📋', text: 'Data Tables' },
                 ],
@@ -32,7 +32,7 @@ const navConfig = {
                 label: 'Management', items: [
                     { to: '/state/districts', icon: '🏛️', text: 'Districts' },
                     { to: '/state/courts', icon: '⚖️', text: 'Courts' },
-                    { to: '/state/magistrates', icon: '👨‍⚖️', text: 'Magistrates' },
+                    { to: '/state/magistrates', icon: '👨‍⚖️', text: 'Judicial Officers' },
                     { to: '/state/naib-courts', icon: '👤', text: 'Naib Courts' },
                 ],
             },
@@ -52,7 +52,7 @@ const navConfig = {
             {
                 label: 'Management', items: [
                     { to: '/district/courts', icon: '⚖️', text: 'Courts' },
-                    { to: '/district/magistrates', icon: '👨‍⚖️', text: 'Magistrates' },
+                    { to: '/district/magistrates', icon: '👨‍⚖️', text: 'Judicial Officers' },
                     { to: '/district/naib-courts', icon: '👤', text: 'Naib Courts' },
                 ],
             },

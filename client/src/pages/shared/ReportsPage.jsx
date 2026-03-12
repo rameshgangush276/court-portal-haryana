@@ -72,7 +72,7 @@ export default function ReportsPage() {
                         <label className="form-label">Report Type</label>
                         <select className="form-select" value={reportType} onChange={e => setReportType(e.target.value)}>
                             <option value="court">By Court</option>
-                            <option value="magistrate">By Magistrate</option>
+                            <option value="magistrate">By Judicial Officer</option>
                             <option value="district">By District</option>
                             {isStateLevel && <option value="state">State Overview</option>}
                         </select>
@@ -90,9 +90,9 @@ export default function ReportsPage() {
 
                     {reportType === 'magistrate' && (
                         <div className="form-group">
-                            <label className="form-label">Magistrate</label>
+                            <label className="form-label">Judicial Officer</label>
                             <select className="form-select" value={selectedMagistrate} onChange={e => setSelectedMagistrate(e.target.value)}>
-                                <option value="">Select Magistrate</option>
+                                <option value="">Select Judicial Officer</option>
                                 {magistrates.map(m => <option key={m.id} value={m.id}>{m.name} ({m.designation})</option>)}
                             </select>
                         </div>

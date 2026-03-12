@@ -20,40 +20,8 @@ async function main() {
     });
     console.log('✅ Developer user created');
 
-    // ─── Districts of Haryana ──────────────────────────
-    const districtData = [
-        { name: 'Ambala', code: 'AMB' },
-        { name: 'Bhiwani', code: 'BHW' },
-        { name: 'Charkhi Dadri', code: 'CDR' },
-        { name: 'Faridabad', code: 'FDB' },
-        { name: 'Fatehabad', code: 'FTB' },
-        { name: 'Gurugram', code: 'GGM' },
-        { name: 'Hisar', code: 'HSR' },
-        { name: 'Jhajjar', code: 'JJR' },
-        { name: 'Jind', code: 'JND' },
-        { name: 'Kaithal', code: 'KTL' },
-        { name: 'Karnal', code: 'KNL' },
-        { name: 'Kurukshetra', code: 'KKR' },
-        { name: 'Mahendragarh', code: 'MHG' },
-        { name: 'Nuh', code: 'NUH' },
-        { name: 'Palwal', code: 'PLW' },
-        { name: 'Panchkula', code: 'PKL' },
-        { name: 'Panipat', code: 'PNP' },
-        { name: 'Rewari', code: 'RWR' },
-        { name: 'Rohtak', code: 'RTK' },
-        { name: 'Sirsa', code: 'SRS' },
-        { name: 'Sonipat', code: 'SNP' },
-        { name: 'Yamunanagar', code: 'YNR' },
-    ];
-
-    for (const d of districtData) {
-        await prisma.district.upsert({
-            where: { code: d.code },
-            update: {},
-            create: d,
-        });
-    }
-    console.log(`✅ ${districtData.length} districts created`);
+    // Districts are created by the production seed script (seed-production.js)
+    // which reads them from the Excel files.
 
     // ─── 16 Predefined Data Entry Tables ───────────────
     const tables = [
@@ -297,7 +265,7 @@ async function main() {
         }
     }
 
-    // ─── Sample State Admin ────────────────────────────
+    // ─── State Admin ───────────────────────────────────
     const stateAdminPassword = await bcrypt.hash('state123', 10);
     await prisma.user.upsert({
         where: { username: 'state_admin' },
@@ -311,99 +279,13 @@ async function main() {
     });
     console.log('✅ State admin user created');
 
-    // ─── Sample District Admin (Ambala) ────────────────
-    const ambala = await prisma.district.findUnique({ where: { code: 'AMB' } });
-    if (ambala) {
-        const distAdminPassword = await bcrypt.hash('district123', 10);
-        await prisma.user.upsert({
-            where: { username: 'district_admin_amb' },
-            update: {},
-            create: {
-                username: 'district_admin_amb',
-                passwordHash: distAdminPassword,
-                name: 'District Admin Ambala',
-                role: 'district_admin',
-                districtId: ambala.id,
-            },
-        });
+    // District admins, viewers, courts, and naib courts are created
+    // by the production seed script (seed-production.js)
 
-        // Sample naib court
-        const naibPassword = await bcrypt.hash('naib123', 10);
-        await prisma.user.upsert({
-            where: { username: 'naib_amb_01' },
-            update: {},
-            create: {
-                username: 'naib_amb_01',
-                passwordHash: naibPassword,
-                name: 'Naib Court 1 Ambala',
-                role: 'naib_court',
-                districtId: ambala.id,
-            },
-        });
-
-        // Sample courts
-        const court1 = await prisma.court.upsert({
-            where: { districtId_courtNo: { districtId: ambala.id, courtNo: 'AMB-01' } },
-            update: {},
-            create: { districtId: ambala.id, name: 'Court of ADJ-1, Ambala', courtNo: 'AMB-01' },
-        });
-        await prisma.court.upsert({
-            where: { districtId_courtNo: { districtId: ambala.id, courtNo: 'AMB-02' } },
-            update: {},
-            create: { districtId: ambala.id, name: 'Court of ADJ-2, Ambala', courtNo: 'AMB-02' },
-        });
-        await prisma.court.upsert({
-            where: { districtId_courtNo: { districtId: ambala.id, courtNo: 'AMB-03' } },
-            update: {},
-            create: { districtId: ambala.id, name: 'Court of CJM, Ambala', courtNo: 'AMB-03' },
-        });
-
-        // Sample magistrate
-        await prisma.magistrate.upsert({
-            where: { id: 1 },
-            update: {},
-            create: {
-                name: 'Sh. Rajesh Kumar',
-                designation: 'ADJ',
-                districtId: ambala.id,
-            },
-        });
-
-        console.log('✅ Sample Ambala district data created');
-
-        // Viewer users
-        await prisma.user.upsert({
-            where: { username: 'viewer_district_amb' },
-            update: {},
-            create: {
-                username: 'viewer_district_amb',
-                passwordHash: await bcrypt.hash('viewer123', 10),
-                name: 'District Viewer Ambala',
-                role: 'viewer_district',
-                districtId: ambala.id,
-            },
-        });
-        await prisma.user.upsert({
-            where: { username: 'viewer_state' },
-            update: {},
-            create: {
-                username: 'viewer_state',
-                passwordHash: await bcrypt.hash('viewer123', 10),
-                name: 'State Viewer',
-                role: 'viewer_state',
-            },
-        });
-        console.log('✅ Viewer users created');
-    }
-
-    console.log('\n🎉 Seeding complete!');
+    console.log('\n🎉 Base seeding complete!');
     console.log('\n📋 Login credentials:');
     console.log('   Developer:      developer / admin123');
     console.log('   State Admin:    state_admin / state123');
-    console.log('   District Admin: district_admin_amb / district123');
-    console.log('   Naib Court:     naib_amb_01 / naib123');
-    console.log('   Dist Viewer:    viewer_district_amb / viewer123');
-    console.log('   State Viewer:   viewer_state / viewer123');
 }
 
 main()

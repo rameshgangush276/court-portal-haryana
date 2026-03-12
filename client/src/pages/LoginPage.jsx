@@ -52,9 +52,9 @@ export default function LoginPage() {
     const quickUsers = [
         { label: '👨‍💻 Dev', u: 'developer', p: 'admin123' },
         { label: '🏛️ State', u: 'state_admin', p: 'state123' },
-        { label: '⚖️ Dist', u: 'district_admin_amb', p: 'district123' },
-        { label: '👤 Naib', u: 'naib_amb_01', p: 'naib123' },
-        { label: '🧪 Dummy', u: 'naib_dummy_1', p: 'password123' },
+        { label: '⚖️ Admin', u: 'admin_amb', p: 'district123' },
+        { label: '👤 Naib', u: 'naib_rwr_01', p: 'Welcome@123' },
+        { label: '👁️ Viewer', u: 'viewer_amb', p: 'viewer123' },
     ];
 
     return (
@@ -64,16 +64,18 @@ export default function LoginPage() {
                 <p className="subtitle">Haryana District Courts Data Entry System</p>
 
                 {/* Quick Login for Dev - Local Only */}
-                <div style={{ marginBottom: 'var(--space-xl)', padding: 'var(--space-md)', background: 'rgba(255,255,255,0.05)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--color-border)' }}>
-                    <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--color-text-muted)', marginBottom: 'var(--space-sm)', fontWeight: 700 }}>Quick Login (Local Dev Only)</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 'var(--space-xs)' }}>
-                        {quickUsers.map(qu => (
-                            <button key={qu.u} onClick={() => handleQuickLogin(qu.u, qu.p)} style={{ fontSize: '10px', padding: '6px 2px', borderRadius: '4px', border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', color: 'var(--color-text)' }}>
-                                {qu.label}
-                            </button>
-                        ))}
+                {import.meta.env.DEV && (
+                    <div style={{ marginBottom: 'var(--space-xl)', padding: 'var(--space-md)', background: 'rgba(255,255,255,0.05)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--color-border)' }}>
+                        <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--color-text-muted)', marginBottom: 'var(--space-sm)', fontWeight: 700 }}>Quick Login (Local Dev Only)</div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 'var(--space-xs)' }}>
+                            {quickUsers.map(qu => (
+                                <button type="button" key={qu.u} onClick={() => handleQuickLogin(qu.u, qu.p)} style={{ fontSize: '10px', padding: '6px 2px', borderRadius: '4px', border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', color: 'var(--color-text)' }}>
+                                    {qu.label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {error && (
                     <div style={{
