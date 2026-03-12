@@ -154,15 +154,21 @@ async function main() {
                     cisNumber: findKey(['cis number', 'court number', 'cis']),
                     judgeName: findKey(['magistrate name', 'judge name', 'magistarte name', 'judge/magistarte name']),
                     judgeDesignation: findKey(['designation', 'desig']),
-                    naibRank: findKey(['naib', 'rank']) && findKey(['rank', 'naib court rank']),
+                    naibRank: (findKey(['naib']) && findKey(['rank'])) || findKey(['rank']),
                     naibName: findKey(['naib court name', 'naib name']),
                     naibPhone: findKey(['phone', 'phone no', 'phone number', 'phoneno'])
                 };
 
+                console.log(`   🔍 Column mapping for sheet "${sheetName}":`,
+                    Object.entries(keyMap).filter(([_, v]) => v).map(([k, v]) => `${k}->${v}`).join(', ') || 'None found');
+
                 for (let i = 0; i < rawRows.length; i++) {
                     const rawRow = rawRows[i];
 
-                    const normalizeVal = (val, maxLen) => val ? val.toString().replace(/\s+/g, ' ').trim().substring(0, maxLen) : null;
+                    const normalizeVal = (val, maxLen) => {
+                        if (val === null || val === undefined) return null;
+                        return val.toString().replace(/\s+/g, ' ').trim().substring(0, maxLen);
+                    };
 
                     let districtName = normalizeVal(rawRow[keyMap.district], 100);
                     if (districtName) {
@@ -175,9 +181,8 @@ async function main() {
                     const naibRankStr = normalizeVal(rawRow[keyMap.naibRank], 50);
                     const naibPhoneStr = rawRow[keyMap.naibPhone] ? rawRow[keyMap.naibPhone].toString().replace(/\D/g, '').substring(0, 15) : null;
 
-                    // Skip rows heavily incomplete or explicitly requested to drop (Panipat missing desig)
+                    // Skip rows heavily incomplete or explicitly requested to drop
                     if (!districtName || !judgeDesig) {
-                        console.log(`   ➡️ Dropping Row ${i + 2}: Missing essential designation or district.`);
                         continue;
                     }
 
@@ -312,6 +317,7 @@ async function main() {
 
     // ─── Create District Admins & Viewers ──────────────────
     const processedDistricts = Object.keys(districtUserCouters);
+    console.log(`👤 Creating accounts for ${processedDistricts.length} districts...`);
     const adminPassword = await bcrypt.hash('district123', 10);
     const viewerPassword = await bcrypt.hash('viewer123', 10);
 
