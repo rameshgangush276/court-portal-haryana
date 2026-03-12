@@ -6,7 +6,8 @@ const bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
 
-const dir = 'C:\\Users\\harsh\\court portal antigravity\\TESTING COURT EXCEL FILE';
+// Use relative path to support running on Render and other environments
+const dir = path.join(__dirname, '../TESTING COURT EXCEL FILE');
 
 // Normalization helper
 const normalize = (str) => {
