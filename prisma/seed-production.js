@@ -60,16 +60,27 @@ async function main() {
 
     // CLEANUP: Remove old data to ensure a fresh start with Excel data
     console.log('🧹 Cleaning up existing database records...');
-    await prisma.trialReport.deleteMany({});
-    await prisma.transferLog.deleteMany({});
+
+    // Delete in order to satisfy foreign key constraints
+    try { await prisma.grievanceComment.deleteMany({}); } catch (e) { }
+    try { await prisma.grievance.deleteMany({}); } catch (e) { }
+    try { await prisma.dataEntry.deleteMany({}); } catch (e) { }
+    try { await prisma.transferLog.deleteMany({}); } catch (e) { }
+    try { await prisma.dataEntryColumn.deleteMany({}); } catch (e) { }
+    try { await prisma.dataEntryTable.deleteMany({}); } catch (e) { }
+    try { await prisma.alert.deleteMany({}); } catch (e) { }
+
+    // User has a circular dependency with Court via lastSelectedCourtId
+    // Nullify the references first to allow deletion
+    await prisma.user.updateMany({ data: { lastSelectedCourtId: null } });
+
+    // Now delete main entities
     await prisma.court.deleteMany({});
     await prisma.magistrate.deleteMany({});
-    // Remove all users except the ones we want to keep (or just clear all roles we generate)
-    await prisma.user.deleteMany({
-        where: {
-            role: { in: ['naib_court', 'district_admin', 'viewer_district', 'viewer_state', 'state_admin', 'developer'] }
-        }
-    });
+
+    // Remove all users except possibly system ones, but we recreate them anyway
+    await prisma.user.deleteMany({});
+
     // Finally clear districts
     await prisma.district.deleteMany({});
     console.log('✅ Cleanup complete.\n');
