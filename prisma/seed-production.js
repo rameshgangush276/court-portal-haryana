@@ -58,6 +58,46 @@ const generateUsername = (role, districtCode, index) => {
 async function main() {
     console.log('Starting production data seed...');
 
+    // CLEANUP: Remove old data to ensure a fresh start with Excel data
+    console.log('🧹 Cleaning up existing database records...');
+    await prisma.trialReport.deleteMany({});
+    await prisma.transferLog.deleteMany({});
+    await prisma.court.deleteMany({});
+    await prisma.magistrate.deleteMany({});
+    // Remove all users except the ones we want to keep (or just clear all roles we generate)
+    await prisma.user.deleteMany({
+        where: {
+            role: { in: ['naib_court', 'district_admin', 'viewer_district', 'viewer_state', 'state_admin', 'developer'] }
+        }
+    });
+    // Finally clear districts
+    await prisma.district.deleteMany({});
+    console.log('✅ Cleanup complete.\n');
+
+    // Create base users (Developer, State Admin)
+    console.log('👤 Creating base system users...');
+    const devPassword = await bcrypt.hash('admin123', 10);
+    const statePassword = await bcrypt.hash('state123', 10);
+
+    await prisma.user.create({
+        data: {
+            username: 'developer',
+            passwordHash: devPassword,
+            name: 'System Developer',
+            role: 'developer',
+        },
+    });
+
+    await prisma.user.create({
+        data: {
+            username: 'state_admin',
+            passwordHash: statePassword,
+            name: 'State Admin',
+            role: 'state_admin',
+        },
+    });
+    console.log('✅ Base users created.');
+
     const files = fs.readdirSync(dir).filter(f => f.endsWith('.xlsx') && !f.startsWith('~$'));
 
     // Track stats
