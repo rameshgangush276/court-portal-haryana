@@ -282,18 +282,21 @@ a:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: var(--space-sm);
+  justify-content: center;
+  gap: 4px;
+  padding: 4px;
   border-radius: var(--radius-md);
   color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
+  font-size: 10px;
   font-weight: 500;
   border: none;
   background: none;
   cursor: pointer;
   transition: all var(--transition-fast);
-  min-width: 56px;
+  flex: 1;
   text-decoration: none;
+  text-align: center;
+  min-width: 0;
 }
 
 .bottom-nav-item:hover,
@@ -302,7 +305,20 @@ a:hover {
 }
 
 .bottom-nav-item .icon {
-  font-size: 20px;
+  font-size: 18px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
+}
+
+.bottom-nav-item span:last-child {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ─── Cards ─────────────────────────────────────────── */
