@@ -27,6 +27,17 @@ router.get('/:id', authenticate, async (req, res, next) => {
     } catch (err) { next(err); }
 });
 
+// GET /api/v1/districts/:id/police-stations
+router.get('/:id/police-stations', authenticate, async (req, res, next) => {
+    try {
+        const policeStations = await prisma.policeStation.findMany({
+            where: { districtId: parseInt(req.params.id) },
+            orderBy: { name: 'asc' },
+        });
+        res.json({ policeStations });
+    } catch (err) { next(err); }
+});
+
 // POST /api/v1/districts
 router.post('/', authenticate, requireRole('developer', 'state_admin'), async (req, res, next) => {
     try {

@@ -591,6 +591,47 @@ async function main() {
     });
     console.log('✅ Created State Viewer (viewer_state / viewer123)');
 
+    // ─── Update Police Stations from CSV ──────────────────
+    console.log('\n🔄 Updating Police Stations from CSV...');
+    const csvPath = path.join(__dirname, '../Disrtrict_PS.csv');
+    if (fs.existsSync(csvPath)) {
+        const fileContent = fs.readFileSync(csvPath, 'utf-8');
+        // Handle UTF-8 BOM if present
+        const cleanContent = fileContent.charCodeAt(0) === 0xFEFF ? fileContent.slice(1) : fileContent;
+        
+        const records = require('csv-parse/sync').parse(cleanContent, {
+            columns: true,
+            skip_empty_lines: true,
+            trim: true
+        });
+
+        console.log(`📋 Found ${records.length} records in CSV.`);
+        await prisma.policeStation.deleteMany({});
+
+        const districtGroups = {};
+        for (const record of records) {
+            const dName = record.District ? record.District.trim() : null;
+            const psName = record.PS ? record.PS.trim() : null;
+            if (dName && psName) {
+                if (!districtGroups[dName.toLowerCase()]) districtGroups[dName.toLowerCase()] = { name: dName, stations: new Set() };
+                districtGroups[dName.toLowerCase()].stations.add(psName);
+            }
+        }
+
+        const dbDistricts = await prisma.district.findMany();
+        for (const [lowerName, group] of Object.entries(districtGroups)) {
+            const district = dbDistricts.find(d => d.name.toLowerCase() === lowerName);
+            if (district) {
+                console.log(`📍 Inserting ${group.stations.size} stations for ${district.name}...`);
+                await prisma.policeStation.createMany({
+                    data: Array.from(group.stations).map(name => ({ name, districtId: district.id }))
+                });
+            }
+        }
+    } else {
+        console.warn('⚠️ Disrtrict_PS.csv not found, skipping Police Station seed.');
+    }
+
     console.log('\n✅ Data Import Complete!');
     console.log(`- Districts: ${processedDistricts.length}`);
     console.log(`- Courts: ${courtsCreated}`);

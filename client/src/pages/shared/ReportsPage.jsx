@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
+import * as XLSX from 'xlsx';
 
 export default function ReportsPage() {
     const { user } = useAuth();
@@ -57,6 +58,41 @@ export default function ReportsPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const exportToExcel = () => {
+        if (!reportData || !reportData.entries || reportData.entries.length === 0) return;
+
+        const table = tables.find(t => t.id === parseInt(selectedTable));
+        const columns = table ? table.columns : [];
+
+        const exportData = reportData.entries.map(entry => {
+            const row = {
+                'Date': new Date(entry.entryDate).toLocaleDateString('en-IN'),
+                'Table Name': entry.table?.name || '—',
+                'Court Name': entry.court?.name || '—',
+                'Entered By': entry.createdByUser?.name || '—',
+            };
+
+            // Add dynamic columns if a specific table is selected
+            if (columns.length > 0) {
+                columns.forEach(col => {
+                    row[col.name] = entry.values?.[col.slug] ?? '—';
+                });
+            } else {
+                // Fallback: list all values in one column if no specific table selected
+                row['Values'] = Object.entries(entry.values || {}).map(([k, v]) => `${k}: ${v}`).join(' | ');
+            }
+
+            return row;
+        });
+
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+
+        const fileName = `Report_${reportType}_${new Date().toISOString().split('T')[0]}.xlsx`;
+        XLSX.writeFile(workbook, fileName);
     };
 
     return (
@@ -133,7 +169,16 @@ export default function ReportsPage() {
 
             {/* Report Results */}
             {reportData && (
-                <div>
+                <div className="mt-xl">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-lg)' }}>
+                        <h3 style={{ margin: 0 }}>Results</h3>
+                        {reportData.entries && reportData.entries.length > 0 && (
+                            <button className="btn btn-secondary" onClick={exportToExcel}>
+                                📥 Export to Excel
+                            </button>
+                        )}
+                    </div>
+
                     {/* State Overview */}
                     {reportType === 'state' && reportData.summaries && (
                         <div>

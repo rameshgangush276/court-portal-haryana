@@ -58,6 +58,7 @@ model District {
   users        User[]
   dataEntries  DataEntry[]
   grievances   Grievance[]
+  policeStations PoliceStation[]
   transfersFrom TransferLog[] @relation("TransferFrom")
   transfersTo   TransferLog[] @relation("TransferTo")
 
@@ -266,4 +267,15 @@ model Alert {
   resolvedAt  DateTime? @map("resolved_at")
 
   @@map("alerts")
+}
+
+model PoliceStation {
+  id         Int      @id @default(autoincrement())
+  districtId Int      @map("district_id")
+  name       String   @db.VarChar(150)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  district   District @relation(fields: [districtId], references: [id])
+
+  @@map("police_stations")
 }

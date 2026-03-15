@@ -17,6 +17,7 @@ export default function NaibDashboard() {
     const [entries, setEntries] = useState([]);
     const [formValues, setFormValues] = useState({});
     const [editingEntry, setEditingEntry] = useState(null);
+    const [policeStations, setPoliceStations] = useState([]);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
@@ -26,7 +27,10 @@ export default function NaibDashboard() {
     useEffect(() => {
         api.get('/courts').then(d => setCourts(d.courts)).catch(console.error);
         api.get('/data-tables').then(d => setTables(d.tables)).catch(console.error);
-    }, []);
+        if (user?.districtId) {
+            api.get(`/districts/${user.districtId}/police-stations`).then(d => setPoliceStations(d.policeStations)).catch(console.error);
+        }
+    }, [user?.districtId]);
 
     // Load entries when court/date/table changes
     useEffect(() => {
@@ -106,6 +110,22 @@ export default function NaibDashboard() {
 
     const renderField = (col) => {
         const value = formValues[col.slug] || '';
+
+        // Special handling for Police Station field
+        if (col.slug === 'police_station' && policeStations.length > 0) {
+            return (
+                <select
+                    className="form-select"
+                    value={value}
+                    onChange={e => setFormValues({ ...formValues, [col.slug]: e.target.value })}
+                >
+                    <option value="">Select Police Station...</option>
+                    {policeStations.map(ps => (
+                        <option key={ps.id} value={ps.name}>{ps.name}</option>
+                    ))}
+                </select>
+            );
+        }
 
         switch (col.dataType) {
             case 'enum':
