@@ -153,7 +153,7 @@ export default function GrievancesPage() {
 
                         {activeGrievance === g.id && (
                             <div className="mt-lg" onClick={e => e.stopPropagation()}>
-                                <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-lg)' }}>{g.description}</p>
+                                <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-lg)', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{g.description}</p>
 
                                 {/* Comments */}
                                 {g.comments?.length > 0 && (
@@ -163,7 +163,7 @@ export default function GrievancesPage() {
                                                 <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', marginBottom: '4px' }}>
                                                     <strong>{c.user?.name}</strong> ({c.user?.role}) • {new Date(c.createdAt).toLocaleString('en-IN')}
                                                 </div>
-                                                <div>{c.body}</div>
+                                                <div style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{c.body}</div>
                                             </div>
                                         ))}
                                     </div>
