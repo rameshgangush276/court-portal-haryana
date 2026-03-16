@@ -16,7 +16,7 @@ export default function DistrictDashboard() {
         ]).then(([c, n, g, a]) => {
             setStats({
                 courts: c.courts?.length || 0,
-                naibCourts: n.users?.length || 0,
+                naibCourts: n.naibCourts?.length || 0,
                 grievances: g.grievances?.filter(gr => !['resolved', 'cancelled'].includes(gr.status)).length || 0,
                 alerts: a.alerts?.filter(al => !al.resolved).length || 0,
             });
