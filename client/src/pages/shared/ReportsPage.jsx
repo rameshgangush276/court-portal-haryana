@@ -77,11 +77,12 @@ export default function ReportsPage() {
             // Add dynamic columns if a specific table is selected
             if (columns.length > 0) {
                 columns.forEach(col => {
-                    row[col.name] = entry.values?.[col.slug] ?? '—';
+                    const val = entry.values?.[col.slug];
+                    row[col.name] = (val !== undefined && val !== null) ? val : '—';
                 });
             } else {
                 // Fallback: list all values in one column if no specific table selected
-                row['Values'] = Object.entries(entry.values || {}).map(([k, v]) => `${k}: ${v}`).join(' | ');
+                row['Values'] = Object.entries(entry.values || {}).map(([k, v]) => `${k}: ${v !== null && v !== undefined ? v : '—'}`).join(' | ');
             }
 
             return row;
@@ -258,7 +259,7 @@ export default function ReportsPage() {
                                             <td data-label="Court">{e.court?.name || '—'}</td>
                                             <td data-label="Created By">{e.createdByUser?.name || '—'}</td>
                                             <td data-label="Values" style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                {Object.entries(e.values || {}).map(([k, v]) => `${k}: ${v}`).join(' | ')}
+                                                {Object.entries(e.values || {}).map(([k, v]) => `${k}: ${v !== null && v !== undefined ? v : '—'}`).join(' | ')}
                                             </td>
                                         </tr>
                                     ))}

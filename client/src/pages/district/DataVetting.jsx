@@ -64,7 +64,7 @@ export default function DataVetting() {
                                     <td data-label="Court">{e.court?.name}</td>
                                     <td data-label="Entered By">{e.createdByUser?.name}</td>
                                     <td data-label="Data" style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                        {Object.entries(e.values || {}).map(([k, v]) => `${k}: ${v}`).join(' | ')}
+                                        {Object.entries(e.values || {}).map(([k, v]) => `${k}: ${v !== null && v !== undefined ? v : '—'}`).join(' | ')}
                                     </td>
                                 </tr>
                             ))}

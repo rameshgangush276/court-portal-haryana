@@ -109,7 +109,7 @@ export default function NaibDashboard() {
     };
 
     const renderField = (col) => {
-        const value = formValues[col.slug] || '';
+        const value = (formValues[col.slug] !== undefined && formValues[col.slug] !== null) ? formValues[col.slug] : '';
 
         // Special handling for Police Station field
         if (col.slug === 'police_station' && policeStations.length > 0) {
@@ -139,7 +139,17 @@ export default function NaibDashboard() {
                 );
             case 'number':
                 return (
-                    <input className="form-input" type="number" value={value} onChange={e => setFormValues({ ...formValues, [col.slug]: e.target.value ? Number(e.target.value) : '' })} />
+                    <input 
+                        className="form-input" 
+                        type="number" 
+                        min="0"
+                        value={value} 
+                        onChange={e => {
+                            const val = e.target.value;
+                            if (val !== '' && Number(val) < 0) return; // Prevent negative typing
+                            setFormValues({ ...formValues, [col.slug]: val !== '' ? Number(val) : '' });
+                        }} 
+                    />
                 );
             case 'date':
                 return (

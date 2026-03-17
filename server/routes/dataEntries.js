@@ -21,7 +21,11 @@ function validateValues(values, columns) {
 
         switch (col.dataType) {
             case 'number':
-                if (isNaN(Number(val))) errors.push(`${col.name} must be a number`);
+                if (isNaN(Number(val))) {
+                    errors.push(`${col.name} must be a number`);
+                } else if (Number(val) < 0) {
+                    errors.push(`${col.name} cannot be negative`);
+                }
                 break;
             case 'enum':
                 const options = col.enumOptions || [];
