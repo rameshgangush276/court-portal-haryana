@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
 
 export default function NaibDashboard() {
-    const { user } = useAuth();
+    const { user, refreshUser } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
     const isSelectCourtPage = location.pathname.includes('select-court');
@@ -46,7 +46,10 @@ export default function NaibDashboard() {
     const handleCourtSelect = async (courtId) => {
         setSelectedCourt(courtId);
         if (courtId) {
-            try { await api.post('/data-entries/select-court', { courtId: parseInt(courtId) }); }
+            try { 
+                await api.post('/data-entries/select-court', { courtId: parseInt(courtId) }); 
+                await refreshUser(); // Update global state
+            }
             catch (err) { console.error(err); }
         }
     };

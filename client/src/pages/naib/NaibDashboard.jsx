@@ -25,7 +25,7 @@ export default function NaibDashboard() {
                 const g = await api.get('/grievances');
                 setStats({
                     grievances: g.grievances?.filter(gr => !['resolved', 'cancelled'].includes(gr.status)).length || 0,
-                    selectedCourt: user?.lastSelectedCourt?.name || user?.lastSelectedCourtName || null,
+                    selectedCourt: user?.lastSelectedCourt?.name || user?.lastSelectedCourt?.courtNo || user?.lastSelectedCourtName || null,
                 });
             } catch (err) {
                 console.error(err);
