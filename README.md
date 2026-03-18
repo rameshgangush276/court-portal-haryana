@@ -107,7 +107,22 @@ The app will be available at http://localhost:3000
 
 ---
 
-## 🔑 Post-Installation (Seeding)
-Once you have seeded the database (using either Docker or Manual method), the log output will display the generated usernames for District Admins, Naib Courts, and Viewers. 
+## 🔄 Maintenance & Synchronization (CRITICAL)
 
-*Contact the system administrator for the initial developer and state admin credentials.*
+If you make any changes via the UI (e.g., adding **New Police Stations** or creating **New Data Entry Tables**), these changes exist only in your local database. To ensure they are saved to GitHub and propagated to other deployments (like Docker or Production):
+
+1.  **Run the Sync Script**:
+    ```bash
+    npm run db:sync
+    ```
+    This will automatically update `prisma/seed-production.js` and `Disrtrict_PS.csv` with your latest database changes.
+
+2.  **Commit and Push**:
+    ```bash
+    git add .
+    git commit -m "Sync UI changes to code"
+    git push
+    ```
+
+> [!IMPORTANT]
+> **Antigravity Rule**: Always run `npm run db:sync` before any `git commit` to ensure the repository remains the single source of truth.

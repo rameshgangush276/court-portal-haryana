@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { useLanguage } from '../../context/LanguageContext';
 
 export default function ManageDistricts() {
     const { t } = useLanguage();
+    const navigate = useNavigate();
     const [districts, setDistricts] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [editItem, setEditItem] = useState(null);
@@ -92,6 +94,9 @@ export default function ManageDistricts() {
                                 <td data-label={t('codeLabel')}><span className="badge badge-primary">{d.code}</span></td>
                                 <td data-label={t('actions')}>
                                     <div className="flex gap-sm">
+                                        <button className="btn btn-secondary btn-sm" onClick={() => navigate(`/dev/districts/${d.id}/police-stations`)}>
+                                            🏢 Stations
+                                        </button>
                                         <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(d)}>{t('edit')}</button>
                                         <button className="btn btn-danger btn-sm" onClick={() => handleDelete(d.id)}>{t('delete')}</button>
                                     </div>

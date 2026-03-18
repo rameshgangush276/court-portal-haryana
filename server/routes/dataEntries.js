@@ -65,6 +65,42 @@ router.post('/select-court', authenticate, requireRole('naib_court'), async (req
     } catch (err) { next(err); }
 });
 
+// GET /api/v1/data-entries/summary?courtId=&entryDate=
+router.get('/summary', authenticate, requireRole('naib_court'), async (req, res, next) => {
+    try {
+        const { courtId, entryDate } = req.query;
+        if (!courtId || !entryDate) return res.status(400).json({ error: 'courtId and entryDate are required' });
+
+        const entryDateObj = new Date(entryDate);
+        
+        // Get all active tables
+        const tables = await prisma.dataEntryTable.findMany({
+            where: { deletedAt: null },
+            select: { id: true, name: true, slug: true, singleRow: true },
+            orderBy: { id: 'asc' }
+        });
+
+        // Count entries for each table
+        const counts = await Promise.all(tables.map(async (table) => {
+            const count = await prisma.dataEntry.count({
+                where: {
+                    tableId: table.id,
+                    courtId: parseInt(courtId),
+                    entryDate: entryDateObj
+                }
+            });
+            return {
+                tableId: table.id,
+                tableName: table.name,
+                singleRow: table.singleRow,
+                count
+            };
+        }));
+
+        res.json({ counts });
+    } catch (err) { next(err); }
+});
+
 // GET /api/v1/data-entries?tableId=&courtId=&entryDate=&districtId=
 router.get('/', authenticate, async (req, res, next) => {
     try {

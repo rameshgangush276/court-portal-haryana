@@ -38,6 +38,44 @@ router.get('/:id/police-stations', authenticate, async (req, res, next) => {
     } catch (err) { next(err); }
 });
 
+// POST /api/v1/districts/:id/police-stations
+router.post('/:id/police-stations', authenticate, requireRole('developer'), async (req, res, next) => {
+    try {
+        const { name } = req.body;
+        if (!name) return res.status(400).json({ error: 'Name is required' });
+
+        const policeStation = await prisma.policeStation.create({
+            data: {
+                name,
+                districtId: parseInt(req.params.id)
+            }
+        });
+        res.status(201).json({ policeStation });
+    } catch (err) { next(err); }
+});
+
+// PUT /api/v1/districts/:districtId/police-stations/:id
+router.put('/:districtId/police-stations/:id', authenticate, requireRole('developer'), async (req, res, next) => {
+    try {
+        const { name } = req.body;
+        const policeStation = await prisma.policeStation.update({
+            where: { id: parseInt(req.params.id) },
+            data: { name }
+        });
+        res.json({ policeStation });
+    } catch (err) { next(err); }
+});
+
+// DELETE /api/v1/districts/:districtId/police-stations/:id
+router.delete('/:districtId/police-stations/:id', authenticate, requireRole('developer'), async (req, res, next) => {
+    try {
+        await prisma.policeStation.delete({
+            where: { id: parseInt(req.params.id) }
+        });
+        res.json({ message: 'Police station deleted' });
+    } catch (err) { next(err); }
+});
+
 // POST /api/v1/districts
 router.post('/', authenticate, requireRole('developer', 'state_admin'), async (req, res, next) => {
     try {

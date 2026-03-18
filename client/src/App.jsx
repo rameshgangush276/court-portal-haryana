@@ -18,6 +18,7 @@ import ChangePassword from './pages/shared/ChangePassword';
 import DevDashboard from './pages/dev/DevDashboard';
 import ResetPasswords from './pages/dev/ResetPasswords';
 import ManageDataTables from './pages/dev/ManageDataTables';
+import ManagePoliceStations from './pages/dev/ManagePoliceStations';
 import StateDashboard from './pages/state/StateDashboard';
 import DistrictDashboard from './pages/district/DistrictDashboard';
 import DataVetting from './pages/district/DataVetting';
@@ -64,6 +65,7 @@ function App() {
           <Route element={<PrivateRoute roles={['developer']}><Layout /></PrivateRoute>}>
             <Route path="/dev" element={<DevDashboard />} />
             <Route path="/dev/districts" element={<ManageDistricts />} />
+            <Route path="/dev/districts/:districtId/police-stations" element={<ManagePoliceStations />} />
             <Route path="/dev/courts" element={<ManageCourts />} />
             <Route path="/dev/magistrates" element={<ManageMagistrates />} />
             <Route path="/dev/naib-courts" element={<ManageNaibCourts />} />

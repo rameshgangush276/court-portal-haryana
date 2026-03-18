@@ -20,6 +20,9 @@ export default function NaibDashboard() {
     const [policeStations, setPoliceStations] = useState([]);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [showSummary, setShowSummary] = useState(false);
+    const [summaryData, setSummaryData] = useState([]);
+    const [finalSubmitted, setFinalSubmitted] = useState(false);
 
     const today = new Date().toISOString().split('T')[0];
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
@@ -106,6 +109,27 @@ export default function NaibDashboard() {
         } catch (err) {
             setError(err.details ? err.details.join(', ') : err.message);
         }
+    };
+
+    const handleViewSummary = async () => {
+        setError('');
+        setSuccess('');
+        try {
+            const params = `?courtId=${selectedCourt}&entryDate=${selectedDate}`;
+            const d = await api.get(`/data-entries/summary${params}`);
+            setSummaryData(d.counts);
+            setShowSummary(true);
+            setFinalSubmitted(false);
+            window.scrollTo(0, 0);
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
+    const handleFinalSubmit = () => {
+        setFinalSubmitted(true);
+        setSuccess('All data for today has been submitted successfully!');
+        window.scrollTo(0, 0);
     };
 
     const renderField = (col) => {
@@ -221,6 +245,91 @@ export default function NaibDashboard() {
                         <p>Please select a court and date first to begin entering data.</p>
                         <button className="btn btn-primary mt-lg" onClick={() => navigate('/naib/select-court')}>Go to Select Court</button>
                     </div>
+                ) : showSummary ? (
+                    <>
+                        <div className="page-header" style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'center' }}>
+                            <button
+                                className="btn btn-secondary btn-sm"
+                                onClick={() => { setShowSummary(false); setFinalSubmitted(false); setError(''); setSuccess(''); }}
+                            >
+                                ← Back to Tables
+                            </button>
+                            <h2 style={{ margin: 0, fontSize: '1.25rem' }}>Data Verification Summary</h2>
+                        </div>
+
+                        <div className="card mb-xl">
+                            <div style={{ display: 'flex', gap: 'var(--space-lg)', fontSize: 'var(--font-size-sm)', fontWeight: 600, flexWrap: 'wrap' }}>
+                                <span style={{ color: 'var(--color-primary)' }}>📍 {courtName}</span>
+                                <span style={{ color: 'var(--color-success)' }}>📅 {selectedDate}</span>
+                            </div>
+                        </div>
+
+                        {success && <div style={{ background: 'rgba(34,197,94,0.15)', color: 'var(--color-success)', padding: 'var(--space-lg)', borderRadius: 'var(--radius-lg)', marginBottom: 'var(--space-xl)', textAlign: 'center', border: '1px solid var(--color-success)' }}>
+                            <div style={{ fontSize: '2rem', marginBottom: 'var(--space-sm)' }}>🎉</div>
+                            <h3 style={{ margin: 0 }}>{success}</h3>
+                            {finalSubmitted && <button className="btn btn-primary mt-lg" onClick={() => navigate('/naib')}>Back to Dashboard</button>}
+                        </div>}
+
+                        {!finalSubmitted && (
+                            <>
+                                <div className="card mb-xl" style={{ overflowX: 'auto' }}>
+                                    <table className="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th style={{ width: '60px' }}>#</th>
+                                                <th>Table Name</th>
+                                                <th style={{ textAlign: 'center' }}>Status / Count</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {summaryData.map((row, idx) => {
+                                                const isEmpty = row.count === 0;
+                                                return (
+                                                    <tr key={row.tableId} style={isEmpty ? { backgroundColor: 'var(--color-danger-soft)' } : {}}>
+                                                        <td>{idx + 1}</td>
+                                                        <td style={isEmpty ? { fontWeight: 600, color: 'var(--color-danger)' } : {}}>{row.tableName}</td>
+                                                        <td style={{ textAlign: 'center' }}>
+                                                            {row.singleRow ? (
+                                                                <span style={{ 
+                                                                    padding: '4px 12px', 
+                                                                    borderRadius: '20px', 
+                                                                    fontSize: '12px', 
+                                                                    background: isEmpty ? 'var(--color-danger-soft)' : 'var(--color-success-soft)',
+                                                                    color: isEmpty ? 'var(--color-danger)' : 'var(--color-success)',
+                                                                    fontWeight: 700
+                                                                }}>
+                                                                    {isEmpty ? '❌ NO' : '✅ YES'}
+                                                                </span>
+                                                            ) : (
+                                                                <span style={{ 
+                                                                    fontWeight: 700,
+                                                                    color: isEmpty ? 'var(--color-danger)' : 'var(--color-text)'
+                                                                }}>
+                                                                    {row.count} Rows
+                                                                </span>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div className="alert alert-info mb-xl">
+                                    <strong>Note:</strong> Please ensure all tables marked in red (0 entries) are either intentionally left blank or filled before final submission.
+                                </div>
+
+                                <button 
+                                    className="btn btn-primary" 
+                                    onClick={handleFinalSubmit}
+                                    style={{ width: '100%', padding: '1rem', fontSize: '1.1rem', background: 'var(--color-success)', borderColor: 'var(--color-success)' }}
+                                >
+                                    🚀 Final Submit Data to District Admin
+                                </button>
+                            </>
+                        )}
+                    </>
                 ) : !activeTable ? (
                     <>
                         <div className="card mb-xl" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
@@ -236,7 +345,7 @@ export default function NaibDashboard() {
                             {tables.map(t => (
                                 <button
                                     key={t.id}
-                                    onClick={() => { setActiveTable(t); setEditingEntry(null); setError(''); setSuccess(''); }}
+                                    onClick={() => { setActiveTable(t); setEditingEntry(null); setError(''); setSuccess(''); setShowSummary(false); }}
                                     style={{
                                         display: 'flex',
                                         alignItems: 'center',
@@ -266,6 +375,20 @@ export default function NaibDashboard() {
                                     {t.name}
                                 </button>
                             ))}
+                            <button
+                                className="btn btn-primary"
+                                onClick={handleViewSummary}
+                                style={{
+                                    marginTop: 'var(--space-md)',
+                                    width: '100%',
+                                    background: 'var(--color-success)',
+                                    borderColor: 'var(--color-success)',
+                                    padding: 'var(--space-md)',
+                                    fontWeight: 700
+                                }}
+                            >
+                                ✅ Review & Final Submit Today's Data
+                            </button>
                         </div>
                     </>
                 ) : (
