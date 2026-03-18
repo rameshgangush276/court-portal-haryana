@@ -862,7 +862,7 @@ async function main() {
 
                 // 3. Upsert Court
                 const court = await prisma.court.upsert({
-                    where: { courtNo: c.courtNo },
+                    where: { districtId_courtNo: { districtId: district.id, courtNo: c.courtNo } },
                     update: {
                         name: c.name,
                         cisNumber: c.cisNumber,

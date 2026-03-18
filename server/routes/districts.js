@@ -39,7 +39,7 @@ router.get('/:id/police-stations', authenticate, async (req, res, next) => {
 });
 
 // POST /api/v1/districts/:id/police-stations
-router.post('/:id/police-stations', authenticate, requireRole('developer'), async (req, res, next) => {
+router.post('/:id/police-stations', authenticate, requireRole('developer', 'state_admin'), async (req, res, next) => {
     try {
         const { name } = req.body;
         if (!name) return res.status(400).json({ error: 'Name is required' });
@@ -55,7 +55,7 @@ router.post('/:id/police-stations', authenticate, requireRole('developer'), asyn
 });
 
 // PUT /api/v1/districts/:districtId/police-stations/:id
-router.put('/:districtId/police-stations/:id', authenticate, requireRole('developer'), async (req, res, next) => {
+router.put('/:districtId/police-stations/:id', authenticate, requireRole('developer', 'state_admin'), async (req, res, next) => {
     try {
         const { name } = req.body;
         const policeStation = await prisma.policeStation.update({
@@ -67,7 +67,7 @@ router.put('/:districtId/police-stations/:id', authenticate, requireRole('develo
 });
 
 // DELETE /api/v1/districts/:districtId/police-stations/:id
-router.delete('/:districtId/police-stations/:id', authenticate, requireRole('developer'), async (req, res, next) => {
+router.delete('/:districtId/police-stations/:id', authenticate, requireRole('developer', 'state_admin'), async (req, res, next) => {
     try {
         await prisma.policeStation.delete({
             where: { id: parseInt(req.params.id) }

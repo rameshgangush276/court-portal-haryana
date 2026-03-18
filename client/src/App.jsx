@@ -80,6 +80,7 @@ function App() {
           <Route element={<PrivateRoute roles={['state_admin']}><Layout /></PrivateRoute>}>
             <Route path="/state" element={<StateDashboard />} />
             <Route path="/state/districts" element={<ManageDistricts />} />
+            <Route path="/state/districts/:districtId/police-stations" element={<ManagePoliceStations />} />
             <Route path="/state/courts" element={<ManageCourts />} />
             <Route path="/state/magistrates" element={<ManageMagistrates />} />
             <Route path="/state/naib-courts" element={<ManageNaibCourts />} />
