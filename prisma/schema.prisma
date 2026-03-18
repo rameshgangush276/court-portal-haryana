@@ -58,6 +58,7 @@ model Magistrate {
   dataEntries DataEntry[]
   district    District?   @relation(fields: [districtId], references: [id])
 
+  @@unique([districtId, name])
   @@map("magistrates")
 }
 
@@ -215,6 +216,7 @@ model PoliceStation {
   createdAt  DateTime @default(now()) @map("created_at")
   district   District @relation(fields: [districtId], references: [id])
 
+  @@unique([districtId, name])
   @@map("police_stations")
 }
 

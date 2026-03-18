@@ -934,22 +934,14 @@ async function main() {
             // Handle magistrate
             let magistrateId = null;
             if (cData.magistrate) {
-                let mag = await prisma.magistrate.findFirst({
-                    where: { name: cData.magistrate.name, districtId: district.id },
+                // Upsert on unique (districtId, name) — eliminates duplicate judicial officers
+                const mag = await prisma.magistrate.upsert({
+                    where: { districtId_name: { districtId: district.id, name: cData.magistrate.name } },
+                    update: { designation: cData.magistrate.designation, deletedAt: null },
+                    create: { name: cData.magistrate.name, designation: cData.magistrate.designation, districtId: district.id },
                 });
-                if (mag) {
-                    await prisma.magistrate.update({
-                        where: { id: mag.id },
-                        data: { designation: cData.magistrate.designation, deletedAt: null },
-                    });
-                    magistrateId = mag.id;
-                } else {
-                    mag = await prisma.magistrate.create({
-                        data: { name: cData.magistrate.name, designation: cData.magistrate.designation, districtId: district.id },
-                    });
-                    magistrateId = mag.id;
-                    magistratesCreated++;
-                }
+                magistrateId = mag.id;
+                magistratesCreated++;
             }
 
             // Upsert court by unique key (districtId + courtNo) — prevents duplicates
@@ -980,14 +972,19 @@ async function main() {
         }
     }
 
-    // ─── Phase 3: Delete courts not found in any Excel file ───────────────────
-    console.log('\n🗑️  Phase 3: Cleaning up orphaned courts...');
+    // ─── Phase 3: Delete Excel-managed courts no longer in any Excel file ───────
+    // Only removes courts matching the auto-generated pattern (e.g. PKL-CRT-01).
+    // Courts added manually via the Developer UI (with custom courtNos) are NEVER deleted.
+    console.log('\n🗑️  Phase 3: Cleaning up removed Excel courts...');
+    const excelCourtNoPattern = /^[A-Z]+-CRT-\d+$/;
     const dbCourts = await prisma.court.findMany({
         where: { districtId: { in: Array.from(districtsHandled) } },
     });
     for (const c of dbCourts) {
+        // Skip courts that were manually added via UI (non-standard courtNo)
+        if (!excelCourtNoPattern.test(c.courtNo)) continue;
         if (!allSeenCourtIds.has(c.id)) {
-            console.log(`  🗑️  Removing: ${c.courtNo} - ${c.name}`);
+            console.log(`  🗑️  Removing deleted Excel court: ${c.courtNo} - ${c.name}`);
             try {
                 await prisma.court.delete({ where: { id: c.id } });
                 courtsDeleted++;
@@ -996,7 +993,7 @@ async function main() {
             }
         }
     }
-    if (courtsDeleted > 0) console.log(`  ✅ Removed ${courtsDeleted} orphaned courts.`);
+    if (courtsDeleted > 0) console.log(`  ✅ Removed ${courtsDeleted} Excel-orphaned courts.`);
 
     // ─── Phase 4: Create district admin & viewer accounts ─────────────────────
     const allKnownDistricts = await prisma.district.findMany({ where: { deletedAt: null } });
@@ -1026,8 +1023,10 @@ async function main() {
         create: { username: 'viewer_state', password: 'viewer123', name: 'State Viewer', role: 'viewer_state' },
     });
 
-    // ─── Phase 5: Police Stations — wipe & reload from CSV ────────────────────
-    console.log('\n🔄 Phase 5: Reloading Police Stations from CSV (clean slate)...');
+    // ─── Phase 5: Police Stations — upsert from CSV (preserves UI additions) ────
+    // Uses upsert on unique (districtId, name) — no deleteMany, so stations added
+    // through the Developer UI are NEVER removed. CSV stations are merged in safely.
+    console.log('\n🔄 Phase 5: Merging Police Stations from CSV...');
     const csvPath = path.join(__dirname, '../Disrtrict_PS.csv');
     if (fs.existsSync(csvPath)) {
         const records = require('csv-parse/sync').parse(
@@ -1035,24 +1034,21 @@ async function main() {
             { columns: true, skip_empty_lines: true, trim: true }
         );
 
-        // Delete all police stations for managed districts (clean slate prevents duplicates)
-        await prisma.policeStation.deleteMany({
-            where: { districtId: { in: Array.from(districtsHandled) } },
-        });
-        console.log('  🗑️  Cleared existing police stations for managed districts.');
-
-        let psInserted = 0;
+        let psUpserted = 0;
         for (const record of records) {
             if (!record.PS || !record.District) continue;
             const districtCode = generateDistrictCode(record.District);
             const district = await prisma.district.findUnique({ where: { code: districtCode } });
             if (!district) continue;
-            await prisma.policeStation.create({
-                data: { name: record.PS.trim(), districtId: district.id },
+            // Upsert on unique (districtId, name) — idempotent and safe to run repeatedly
+            await prisma.policeStation.upsert({
+                where: { districtId_name: { districtId: district.id, name: record.PS.trim() } },
+                update: {},  // nothing to update, name+districtId is the key
+                create: { name: record.PS.trim(), districtId: district.id },
             });
-            psInserted++;
+            psUpserted++;
         }
-        console.log(`  ✅ Inserted ${psInserted} Police Stations fresh from CSV.`);
+        console.log(`  ✅ Merged ${psUpserted} Police Stations from CSV (UI additions preserved).`);
     } else {
         console.log('  ⚠️  Disrtrict_PS.csv not found — skipping police stations.');
     }
