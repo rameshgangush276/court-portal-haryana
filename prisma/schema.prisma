@@ -7,7 +7,216 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ─── Enums ────────────────────────────────────────────
+model District {
+  id             Int             @id @default(autoincrement())
+  name           String          @db.VarChar(100)
+  code           String          @unique @db.VarChar(10)
+  createdAt      DateTime        @default(now()) @map("created_at")
+  deletedAt      DateTime?       @map("deleted_at")
+  courts         Court[]
+  dataEntries    DataEntry[]
+  grievances     Grievance[]
+  magistrates    Magistrate[]
+  policeStations PoliceStation[]
+  transfersFrom  TransferLog[]   @relation("TransferFrom")
+  transfersTo    TransferLog[]   @relation("TransferTo")
+  users          User[]
+
+  @@map("districts")
+}
+
+model Court {
+  id                 Int           @id @default(autoincrement())
+  districtId         Int           @map("district_id")
+  name               String        @db.VarChar(150)
+  courtNo            String        @map("court_no") @db.VarChar(20)
+  magistrateId       Int?          @map("magistrate_id")
+  createdAt          DateTime      @default(now()) @map("created_at")
+  deletedAt          DateTime?     @map("deleted_at")
+  cisNumber          String?       @map("cis_number") @db.VarChar(50)
+  district           District      @relation(fields: [districtId], references: [id])
+  magistrate         Magistrate?   @relation(fields: [magistrateId], references: [id])
+  dataEntries        DataEntry[]
+  transfersFromCourt TransferLog[] @relation("TransferFromCourt")
+  transfersToCourt   TransferLog[] @relation("TransferToCourt")
+  usersLastSelected  User[]        @relation("LastSelectedCourt")
+
+  @@unique([districtId, courtNo])
+  @@map("courts")
+}
+
+model Magistrate {
+  id          Int         @id @default(autoincrement())
+  name        String      @db.VarChar(150)
+  designation String      @db.VarChar(100)
+  districtId  Int?        @map("district_id")
+  phone       String?     @db.VarChar(15)
+  createdAt   DateTime    @default(now()) @map("created_at")
+  deletedAt   DateTime?   @map("deleted_at")
+  gender      String?     @db.VarChar(10)
+  courts      Court[]
+  dataEntries DataEntry[]
+  district    District?   @relation(fields: [districtId], references: [id])
+
+  @@map("magistrates")
+}
+
+model User {
+  id                  Int                @id @default(autoincrement())
+  username            String             @unique @db.VarChar(50)
+  password            String             @map("password_hash")
+  name                String             @db.VarChar(150)
+  role                UserRole
+  districtId          Int?               @map("district_id")
+  phone               String?            @db.VarChar(15)
+  lastSelectedCourtId Int?               @map("last_selected_court_id")
+  refreshToken        String?            @map("refresh_token")
+  createdAt           DateTime           @default(now()) @map("created_at")
+  deletedAt           DateTime?          @map("deleted_at")
+  rank                String?            @db.VarChar(50)
+  dataEntriesCreated  DataEntry[]        @relation("EntryCreatedBy")
+  dataEntriesUpdated  DataEntry[]        @relation("EntryUpdatedBy")
+  dataTablesCreated   DataEntryTable[]
+  grievanceComments   GrievanceComment[]
+  grievancesAssigned  Grievance[]        @relation("GrievanceAssignedTo")
+  grievancesRaised    Grievance[]        @relation("GrievanceRaisedBy")
+  transfersMade       TransferLog[]      @relation("TransferredBy")
+  district            District?          @relation(fields: [districtId], references: [id])
+  lastSelectedCourt   Court?             @relation("LastSelectedCourt", fields: [lastSelectedCourtId], references: [id])
+
+  @@map("users")
+}
+
+model TransferLog {
+  id                Int                @id @default(autoincrement())
+  entityType        TransferEntityType @map("entity_type")
+  entityId          Int                @map("entity_id")
+  fromDistrictId    Int?               @map("from_district_id")
+  toDistrictId      Int?               @map("to_district_id")
+  fromCourtId       Int?               @map("from_court_id")
+  toCourtId         Int?               @map("to_court_id")
+  transferredBy     Int                @map("transferred_by")
+  transferDate      DateTime           @map("transfer_date") @db.Date
+  createdAt         DateTime           @default(now()) @map("created_at")
+  fromCourt         Court?             @relation("TransferFromCourt", fields: [fromCourtId], references: [id])
+  fromDistrict      District?          @relation("TransferFrom", fields: [fromDistrictId], references: [id])
+  toCourt           Court?             @relation("TransferToCourt", fields: [toCourtId], references: [id])
+  toDistrict        District?          @relation("TransferTo", fields: [toDistrictId], references: [id])
+  transferredByUser User               @relation("TransferredBy", fields: [transferredBy], references: [id])
+
+  @@map("transfer_logs")
+}
+
+model DataEntryTable {
+  id          Int               @id @default(autoincrement())
+  name        String            @db.VarChar(100)
+  slug        String            @unique @db.VarChar(100)
+  description String?
+  singleRow   Boolean           @default(false) @map("single_row")
+  createdBy   Int               @map("created_by")
+  createdAt   DateTime          @default(now()) @map("created_at")
+  deletedAt   DateTime?         @map("deleted_at")
+  entries     DataEntry[]
+  columns     DataEntryColumn[]
+  creator     User              @relation(fields: [createdBy], references: [id])
+
+  @@map("data_entry_tables")
+}
+
+model DataEntryColumn {
+  id          Int            @id @default(autoincrement())
+  tableId     Int            @map("table_id")
+  name        String         @db.VarChar(100)
+  slug        String         @db.VarChar(100)
+  dataType    ColumnDataType @map("data_type")
+  enumOptions Json?          @map("enum_options")
+  isRequired  Boolean        @default(true) @map("is_required")
+  sortOrder   Int            @default(0) @map("sort_order")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  deletedAt   DateTime?      @map("deleted_at")
+  table       DataEntryTable @relation(fields: [tableId], references: [id])
+
+  @@unique([tableId, slug])
+  @@map("data_entry_columns")
+}
+
+model DataEntry {
+  id            Int            @id @default(autoincrement())
+  tableId       Int            @map("table_id")
+  districtId    Int            @map("district_id")
+  courtId       Int            @map("court_id")
+  magistrateId  Int?           @map("magistrate_id")
+  entryDate     DateTime       @map("entry_date") @db.Date
+  values        Json
+  createdBy     Int            @map("created_by")
+  updatedBy     Int?           @map("updated_by")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  court         Court          @relation(fields: [courtId], references: [id])
+  createdByUser User           @relation("EntryCreatedBy", fields: [createdBy], references: [id])
+  district      District       @relation(fields: [districtId], references: [id])
+  magistrate    Magistrate?    @relation(fields: [magistrateId], references: [id])
+  table         DataEntryTable @relation(fields: [tableId], references: [id])
+  updatedByUser User?          @relation("EntryUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("data_entries")
+}
+
+model Grievance {
+  id             Int                @id @default(autoincrement())
+  raisedBy       Int                @map("raised_by")
+  subject        String             @db.VarChar(200)
+  description    String
+  status         GrievanceStatus    @default(open)
+  currentLevel   GrievanceLevel     @map("current_level")
+  districtId     Int?               @map("district_id")
+  assignedTo     Int?               @map("assigned_to")
+  createdAt      DateTime           @default(now()) @map("created_at")
+  resolvedAt     DateTime?          @map("resolved_at")
+  comments       GrievanceComment[]
+  assignedToUser User?              @relation("GrievanceAssignedTo", fields: [assignedTo], references: [id])
+  district       District?          @relation(fields: [districtId], references: [id])
+  raisedByUser   User               @relation("GrievanceRaisedBy", fields: [raisedBy], references: [id])
+
+  @@map("grievances")
+}
+
+model GrievanceComment {
+  id          Int       @id @default(autoincrement())
+  grievanceId Int       @map("grievance_id")
+  userId      Int       @map("user_id")
+  body        String
+  createdAt   DateTime  @default(now()) @map("created_at")
+  grievance   Grievance @relation(fields: [grievanceId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@map("grievance_comments")
+}
+
+model Alert {
+  id         Int       @id @default(autoincrement())
+  districtId Int       @map("district_id")
+  alertType  String    @map("alert_type") @db.VarChar(50)
+  message    String
+  metadata   Json?
+  resolved   Boolean   @default(false)
+  resolvedBy Int?      @map("resolved_by")
+  alertDate  DateTime  @map("alert_date") @db.Date
+  createdAt  DateTime  @default(now()) @map("created_at")
+  resolvedAt DateTime? @map("resolved_at")
+
+  @@map("alerts")
+}
+
+model PoliceStation {
+  id         Int      @id @default(autoincrement())
+  districtId Int      @map("district_id")
+  name       String   @db.VarChar(150)
+  createdAt  DateTime @default(now()) @map("created_at")
+  district   District @relation(fields: [districtId], references: [id])
+
+  @@map("police_stations")
+}
 
 enum UserRole {
   developer
@@ -43,240 +252,4 @@ enum ColumnDataType {
   date
   enum
   boolean
-}
-
-// ─── Core Entities ────────────────────────────────────
-
-model District {
-  id        Int       @id @default(autoincrement())
-  name      String    @db.VarChar(100)
-  code      String    @unique @db.VarChar(10)
-  createdAt DateTime  @default(now()) @map("created_at")
-  deletedAt DateTime? @map("deleted_at")
-
-  courts       Court[]
-  magistrates  Magistrate[]
-  users        User[]
-  dataEntries  DataEntry[]
-  grievances   Grievance[]
-  policeStations PoliceStation[]
-  transfersFrom TransferLog[] @relation("TransferFrom")
-  transfersTo   TransferLog[] @relation("TransferTo")
-
-  @@map("districts")
-}
-
-model Court {
-  id           Int       @id @default(autoincrement())
-  districtId   Int       @map("district_id")
-  name         String    @db.VarChar(150)
-  courtNo      String    @db.VarChar(20) @map("court_no")
-  cisNumber    String?   @db.VarChar(50) @map("cis_number")
-  magistrateId Int?      @map("magistrate_id")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  deletedAt    DateTime? @map("deleted_at")
-
-  district    District    @relation(fields: [districtId], references: [id])
-  magistrate  Magistrate? @relation(fields: [magistrateId], references: [id])
-  dataEntries DataEntry[]
-  usersLastSelected User[] @relation("LastSelectedCourt")
-  transfersFromCourt TransferLog[] @relation("TransferFromCourt")
-  transfersToCourt   TransferLog[] @relation("TransferToCourt")
-
-  @@unique([districtId, courtNo])
-  @@map("courts")
-}
-
-model Magistrate {
-  id          Int       @id @default(autoincrement())
-  name        String    @db.VarChar(150)
-  designation String    @db.VarChar(100)
-  gender      String?   @db.VarChar(10)
-  districtId  Int?      @map("district_id")
-  phone       String?   @db.VarChar(15)
-  createdAt   DateTime  @default(now()) @map("created_at")
-  deletedAt   DateTime? @map("deleted_at")
-
-  district    District?   @relation(fields: [districtId], references: [id])
-  courts      Court[]
-  dataEntries DataEntry[]
-
-  @@map("magistrates")
-}
-
-// ─── Users ────────────────────────────────────────────
-
-model User {
-  id                    Int       @id @default(autoincrement())
-  username              String    @unique @db.VarChar(50)
-  password              String    @map("password_hash")
-  name                  String    @db.VarChar(150)
-  role                  UserRole
-  rank                  String?   @db.VarChar(50)
-  districtId            Int?      @map("district_id")
-  phone                 String?   @db.VarChar(15)
-  lastSelectedCourtId   Int?      @map("last_selected_court_id")
-  refreshToken          String?   @map("refresh_token")
-  createdAt             DateTime  @default(now()) @map("created_at")
-  deletedAt             DateTime? @map("deleted_at")
-
-  district              District?  @relation(fields: [districtId], references: [id])
-  lastSelectedCourt     Court?     @relation("LastSelectedCourt", fields: [lastSelectedCourtId], references: [id])
-  dataEntriesCreated    DataEntry[] @relation("EntryCreatedBy")
-  dataEntriesUpdated    DataEntry[] @relation("EntryUpdatedBy")
-  transfersMade         TransferLog[] @relation("TransferredBy")
-  grievancesRaised      Grievance[] @relation("GrievanceRaisedBy")
-  grievancesAssigned    Grievance[] @relation("GrievanceAssignedTo")
-  grievanceComments     GrievanceComment[]
-  dataTablesCreated     DataEntryTable[]
-
-  @@map("users")
-}
-
-// ─── Transfer Log ─────────────────────────────────────
-
-model TransferLog {
-  id              Int                @id @default(autoincrement())
-  entityType      TransferEntityType @map("entity_type")
-  entityId        Int                @map("entity_id")
-  fromDistrictId  Int?               @map("from_district_id")
-  toDistrictId    Int?               @map("to_district_id")
-  fromCourtId     Int?               @map("from_court_id")
-  toCourtId       Int?               @map("to_court_id")
-  transferredBy   Int                @map("transferred_by")
-  transferDate    DateTime           @map("transfer_date") @db.Date
-  createdAt       DateTime           @default(now()) @map("created_at")
-
-  fromDistrict    District?  @relation("TransferFrom", fields: [fromDistrictId], references: [id])
-  toDistrict      District?  @relation("TransferTo", fields: [toDistrictId], references: [id])
-  fromCourt       Court?     @relation("TransferFromCourt", fields: [fromCourtId], references: [id])
-  toCourt         Court?     @relation("TransferToCourt", fields: [toCourtId], references: [id])
-  transferredByUser User     @relation("TransferredBy", fields: [transferredBy], references: [id])
-
-  @@map("transfer_logs")
-}
-
-// ─── Dynamic Data Entry Tables ────────────────────────
-
-model DataEntryTable {
-  id          Int       @id @default(autoincrement())
-  name        String    @db.VarChar(100)
-  slug        String    @unique @db.VarChar(100)
-  description String?
-  singleRow   Boolean   @default(false) @map("single_row")
-  createdBy   Int       @map("created_by")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  deletedAt   DateTime? @map("deleted_at")
-
-  creator     User      @relation(fields: [createdBy], references: [id])
-  columns     DataEntryColumn[]
-  entries     DataEntry[]
-
-  @@map("data_entry_tables")
-}
-
-model DataEntryColumn {
-  id          Int            @id @default(autoincrement())
-  tableId     Int            @map("table_id")
-  name        String         @db.VarChar(100)
-  slug        String         @db.VarChar(100)
-  dataType    ColumnDataType @map("data_type")
-  enumOptions Json?          @map("enum_options")
-  isRequired  Boolean        @default(true) @map("is_required")
-  sortOrder   Int            @default(0) @map("sort_order")
-  createdAt   DateTime       @default(now()) @map("created_at")
-  deletedAt   DateTime?      @map("deleted_at")
-
-  table       DataEntryTable @relation(fields: [tableId], references: [id])
-
-  @@unique([tableId, slug])
-  @@map("data_entry_columns")
-}
-
-// ─── Data Entries ─────────────────────────────────────
-
-model DataEntry {
-  id           Int       @id @default(autoincrement())
-  tableId      Int       @map("table_id")
-  districtId   Int       @map("district_id")
-  courtId      Int       @map("court_id")
-  magistrateId Int?      @map("magistrate_id")
-  entryDate    DateTime  @map("entry_date") @db.Date
-  values       Json
-  createdBy    Int       @map("created_by")
-  updatedBy    Int?      @map("updated_by")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
-
-  table        DataEntryTable @relation(fields: [tableId], references: [id])
-  district     District       @relation(fields: [districtId], references: [id])
-  court        Court          @relation(fields: [courtId], references: [id])
-  magistrate   Magistrate?    @relation(fields: [magistrateId], references: [id])
-  createdByUser User          @relation("EntryCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User?         @relation("EntryUpdatedBy", fields: [updatedBy], references: [id])
-
-  @@map("data_entries")
-}
-
-// ─── Grievances ───────────────────────────────────────
-
-model Grievance {
-  id            Int              @id @default(autoincrement())
-  raisedBy      Int              @map("raised_by")
-  subject       String           @db.VarChar(200)
-  description   String
-  status        GrievanceStatus  @default(open)
-  currentLevel  GrievanceLevel   @map("current_level")
-  districtId    Int?             @map("district_id")
-  assignedTo    Int?             @map("assigned_to")
-  createdAt     DateTime         @default(now()) @map("created_at")
-  resolvedAt    DateTime?        @map("resolved_at")
-
-  raisedByUser    User   @relation("GrievanceRaisedBy", fields: [raisedBy], references: [id])
-  assignedToUser  User?  @relation("GrievanceAssignedTo", fields: [assignedTo], references: [id])
-  district        District? @relation(fields: [districtId], references: [id])
-  comments        GrievanceComment[]
-
-  @@map("grievances")
-}
-
-model GrievanceComment {
-  id          Int      @id @default(autoincrement())
-  grievanceId Int      @map("grievance_id")
-  userId      Int      @map("user_id")
-  body        String
-  createdAt   DateTime @default(now()) @map("created_at")
-
-  grievance   Grievance @relation(fields: [grievanceId], references: [id])
-  user        User      @relation(fields: [userId], references: [id])
-
-  @@map("grievance_comments")
-}
-
-// ─── Alerts ───────────────────────────────────────────
-
-model Alert {
-  id          Int       @id @default(autoincrement())
-  districtId  Int       @map("district_id")
-  alertType   String    @map("alert_type") @db.VarChar(50)
-  message     String
-  metadata    Json?
-  resolved    Boolean   @default(false)
-  resolvedBy  Int?      @map("resolved_by")
-  alertDate   DateTime  @map("alert_date") @db.Date
-  createdAt   DateTime  @default(now()) @map("created_at")
-  resolvedAt  DateTime? @map("resolved_at")
-
-  @@map("alerts")
-}
-
-model PoliceStation {
-  id         Int      @id @default(autoincrement())
-  districtId Int      @map("district_id")
-  name       String   @db.VarChar(150)
-  createdAt  DateTime @default(now()) @map("created_at")
-
-  district   District @relation(fields: [districtId], references: [id])
-
-  @@map("police_stations")
 }
