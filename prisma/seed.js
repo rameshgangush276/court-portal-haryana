@@ -32,7 +32,7 @@ async function main() {
             singleRow: false,
             columns: [
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 0 },
-                { name: 'FIR Date', slug: 'fir_date', dataType: 'date', sortOrder: 1 },
+                { name: 'FIR Year', slug: 'fir_year', dataType: 'year', sortOrder: 1 },
                 { name: 'Sections (U/s)', slug: 'sections', dataType: 'text', sortOrder: 2 },
                 { name: 'Police Station', slug: 'police_station', dataType: 'text', sortOrder: 3 },
                 { name: 'Name of Accused', slug: 'accused_name', dataType: 'text', sortOrder: 4 },
@@ -45,7 +45,7 @@ async function main() {
             singleRow: false,
             columns: [
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 0 },
-                { name: 'FIR Date', slug: 'fir_date', dataType: 'date', sortOrder: 1 },
+                { name: 'FIR Year', slug: 'fir_year', dataType: 'year', sortOrder: 1 },
                 { name: 'Sections (U/s)', slug: 'sections', dataType: 'text', sortOrder: 2 },
                 { name: 'Police Station', slug: 'police_station', dataType: 'text', sortOrder: 3 },
                 { name: 'Decision', slug: 'decision', dataType: 'enum', enumOptions: ['Accepted', 'Further Investigation', 'Trial in court against protest petition'], sortOrder: 4 },
@@ -72,7 +72,7 @@ async function main() {
             columns: [
                 { name: 'Name of Accused', slug: 'accused_name', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
-                { name: 'FIR Date', slug: 'fir_date', dataType: 'date', sortOrder: 2 },
+                { name: 'FIR Year', slug: 'fir_year', dataType: 'year', sortOrder: 2 },
                 { name: 'Sections (U/s)', slug: 'sections', dataType: 'text', sortOrder: 3 },
                 { name: 'Police Station', slug: 'police_station', dataType: 'text', sortOrder: 4 },
                 { name: 'Bail Type', slug: 'bail_type', dataType: 'enum', enumOptions: ['Regular Bail', 'Interim Bail', 'Anticipatory Bail'], sortOrder: 5 },
@@ -89,7 +89,7 @@ async function main() {
             columns: [
                 { name: 'Name of Accused', slug: 'accused_name', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
-                { name: 'FIR Date', slug: 'fir_date', dataType: 'date', sortOrder: 2 },
+                { name: 'FIR Year', slug: 'fir_year', dataType: 'year', sortOrder: 2 },
                 { name: 'Sections (U/s)', slug: 'sections', dataType: 'text', sortOrder: 3 },
                 { name: 'Police Station', slug: 'police_station', dataType: 'text', sortOrder: 4 },
                 { name: 'Declaration Type', slug: 'declaration_type', dataType: 'enum', enumOptions: ['PO', 'PP', 'BJ'], sortOrder: 5 },
@@ -103,7 +103,7 @@ async function main() {
             columns: [
                 { name: 'Name of Accused', slug: 'accused_name', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
-                { name: 'FIR Date', slug: 'fir_date', dataType: 'date', sortOrder: 2 },
+                { name: 'FIR Year', slug: 'fir_year', dataType: 'year', sortOrder: 2 },
                 { name: 'Sections (U/s)', slug: 'sections', dataType: 'text', sortOrder: 3 },
                 { name: 'Police Station', slug: 'police_station', dataType: 'text', sortOrder: 4 },
                 { name: 'BNSS Section', slug: 'bnss_section', dataType: 'enum', enumOptions: ['85 BNSS', '107 BNSS'], sortOrder: 5 },
@@ -176,7 +176,7 @@ async function main() {
             singleRow: false,
             columns: [
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 0 },
-                { name: 'FIR Date', slug: 'fir_date', dataType: 'date', sortOrder: 1 },
+                { name: 'FIR Year', slug: 'fir_year', dataType: 'year', sortOrder: 1 },
                 { name: 'Sections (U/s)', slug: 'sections', dataType: 'text', sortOrder: 2 },
                 { name: 'Police Station', slug: 'police_station', dataType: 'text', sortOrder: 3 },
             ],
@@ -199,7 +199,7 @@ async function main() {
             columns: [
                 { name: 'Gangster & Gang Details', slug: 'gangster_details', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
-                { name: 'FIR Date', slug: 'fir_date', dataType: 'date', sortOrder: 2 },
+                { name: 'FIR Year', slug: 'fir_year', dataType: 'year', sortOrder: 2 },
                 { name: 'Sections (U/s)', slug: 'sections', dataType: 'text', sortOrder: 3 },
                 { name: 'Police Station', slug: 'police_station', dataType: 'text', sortOrder: 4 },
                 { name: 'Accused Status', slug: 'accused_status', dataType: 'enum', enumOptions: ['Bail', 'Judicial Custody'], sortOrder: 5 },
@@ -214,7 +214,7 @@ async function main() {
             columns: [
                 { name: 'Details of Accused', slug: 'accused_details', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
-                { name: 'FIR Date', slug: 'fir_date', dataType: 'date', sortOrder: 2 },
+                { name: 'FIR Year', slug: 'fir_year', dataType: 'year', sortOrder: 2 },
                 { name: 'Sections (U/s)', slug: 'sections', dataType: 'text', sortOrder: 3 },
                 { name: 'Police Station', slug: 'police_station', dataType: 'text', sortOrder: 4 },
                 { name: 'Escort Guard Name', slug: 'escort_guard_name', dataType: 'text', sortOrder: 5 },
@@ -229,7 +229,7 @@ async function main() {
             columns: [
                 { name: 'Name of Accused', slug: 'accused_name', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
-                { name: 'FIR Date', slug: 'fir_date', dataType: 'date', sortOrder: 2 },
+                { name: 'FIR Year', slug: 'fir_year', dataType: 'year', sortOrder: 2 },
                 { name: 'Sections (U/s)', slug: 'sections', dataType: 'text', sortOrder: 3 },
                 { name: 'Police Station', slug: 'police_station', dataType: 'text', sortOrder: 4 },
                 { name: 'Bail Type', slug: 'bail_type', dataType: 'enum', enumOptions: ['Regular Bail', 'Anticipatory Bail'], sortOrder: 5 },

@@ -103,9 +103,9 @@ async function main() {
                                 sortOrder: 0
                         },
                         {
-                                name: "FIR Date",
-                                slug: "fir_date",
-                                dataType: "date",
+                                name: "FIR Year",
+                                slug: "fir_year",
+                                dataType: "year",
                                 sortOrder: 1
                         },
                         {
@@ -141,9 +141,9 @@ async function main() {
                                 sortOrder: 0
                         },
                         {
-                                name: "FIR Date",
-                                slug: "fir_date",
-                                dataType: "date",
+                                name: "FIR Year",
+                                slug: "fir_year",
+                                dataType: "year",
                                 sortOrder: 1
                         },
                         {
@@ -240,9 +240,9 @@ async function main() {
                                 sortOrder: 1
                         },
                         {
-                                name: "FIR Date",
-                                slug: "fir_date",
-                                dataType: "date",
+                                name: "FIR Year",
+                                slug: "fir_year",
+                                dataType: "year",
                                 sortOrder: 2
                         },
                         {
@@ -314,9 +314,9 @@ async function main() {
                                 sortOrder: 1
                         },
                         {
-                                name: "FIR Date",
-                                slug: "fir_date",
-                                dataType: "date",
+                                name: "FIR Year",
+                                slug: "fir_year",
+                                dataType: "year",
                                 sortOrder: 2
                         },
                         {
@@ -363,9 +363,9 @@ async function main() {
                                 sortOrder: 1
                         },
                         {
-                                name: "FIR Date",
-                                slug: "fir_date",
-                                dataType: "date",
+                                name: "FIR Year",
+                                slug: "fir_year",
+                                dataType: "year",
                                 sortOrder: 2
                         },
                         {
@@ -566,9 +566,9 @@ async function main() {
                                 sortOrder: 0
                         },
                         {
-                                name: "FIR Date",
-                                slug: "fir_date",
-                                dataType: "date",
+                                name: "FIR Year",
+                                slug: "fir_year",
+                                dataType: "year",
                                 sortOrder: 1
                         },
                         {
@@ -624,9 +624,9 @@ async function main() {
                                 sortOrder: 1
                         },
                         {
-                                name: "FIR Date",
-                                slug: "fir_date",
-                                dataType: "date",
+                                name: "FIR Year",
+                                slug: "fir_year",
+                                dataType: "year",
                                 sortOrder: 2
                         },
                         {
@@ -679,9 +679,9 @@ async function main() {
                                 sortOrder: 1
                         },
                         {
-                                name: "FIR Date",
-                                slug: "fir_date",
-                                dataType: "date",
+                                name: "FIR Year",
+                                slug: "fir_year",
+                                dataType: "year",
                                 sortOrder: 2
                         },
                         {
@@ -729,9 +729,9 @@ async function main() {
                                 sortOrder: 1
                         },
                         {
-                                name: "FIR Date",
-                                slug: "fir_date",
-                                dataType: "date",
+                                name: "FIR Year",
+                                slug: "fir_year",
+                                dataType: "year",
                                 sortOrder: 2
                         },
                         {

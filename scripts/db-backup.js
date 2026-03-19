@@ -1,17 +1,11 @@
-/**
- * Database Backup Script
- * This script performs a pg_dump of the system database and stores it in the 'backups/' folder.
- * It also automatically rotates backups, keeping only the last 30 days.
- */
-const { exec } = require('child_process');
+const { exec, spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const zlib = require('zlib');
 const { promisify } = require('util');
 
-const execAsync = promisify(exec);
-
 async function runBackup() {
-    console.log('📦 Starting Database Backup...');
+    console.log('📦 Starting Docker-to-Host Compressed Backup...');
     
     // ─── 1. Prepare Paths ──────────────────────────────────────────────────
     const backupDir = path.join(__dirname, '../backups');
@@ -20,51 +14,60 @@ async function runBackup() {
     }
 
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const filename = `court-portal-backup-${timestamp}.sql`;
+    const filename = `court-portal-backup-${timestamp}.sql.gz`;
     const backupPath = path.join(backupDir, filename);
 
-    // ─── 2. Get DB Connection String ─────────────────────────────────────────
-    // On a VM, the DATABASE_URL will be in .env or environment variables.
-    const dbUrl = process.env.DATABASE_URL || '';
-    if (!dbUrl) {
-        console.error('❌ Error: DATABASE_URL not found in environment.');
-        return;
-    }
+    // ─── 2. Docker Container Details ────────────────────────────────────────
+    const containerName = 'courtportalantigravity-db-1';
 
     try {
-        // ─── 3. Run pg_dump ──────────────────────────────────────────────────
-        // Note: pg_dump utility must be installed and in the system PATH.
-        // We use the full URL directly if possible, or extract components.
-        console.log(`📡 Dumping to ${filename}...`);
+        console.log(`📡 Extracting and compressing from container ${containerName}...`);
         
-        // Command for pg_dump (works on both Linux and Windows if pg_dump is in PATH)
-        const cmd = `pg_dump "${dbUrl}" > "${backupPath}"`;
-        
-        await execAsync(cmd);
-        console.log(`✅ Backup saved successfully: ${backupPath}`);
+        // Execute pg_dump INSIDE the docker container
+        // Added --clean --if-exists to include DROP TABLE commands for a cleaner restore.
+        const dumpStream = spawn('docker', [
+            'exec', 
+            '-i', 
+            containerName, 
+            'sh', '-c', `PGPASSWORD=password pg_dump -U user --clean --if-exists court_portal`
+        ]);
+        const gzip = zlib.createGzip();
+        const output = fs.createWriteStream(backupPath);
 
-        // ─── 4. Rotation (Keep only last 30 days) ───────────────────────────
-        console.log('🔄 Checking for old backups to rotate...');
+        dumpStream.stdout.pipe(gzip).pipe(output);
+
+        await new Promise((resolve, reject) => {
+            output.on('finish', () => {
+                console.log(`✅ Backup saved to host: ${backupPath}`);
+                resolve();
+            });
+            dumpStream.on('error', (err) => {
+                console.error('Docker command failed. Is the container running?');
+                reject(err);
+            });
+            gzip.on('error', reject);
+            output.on('error', reject);
+        });
+
+        // ─── 3. Rotation (Keep only last 30 days) ───────────────────────────
+        console.log('🔄 Checking for old backups...');
         const files = fs.readdirSync(backupDir)
-            .filter(f => f.startsWith('court-portal-backup-') && f.endsWith('.sql'))
+            .filter(f => f.startsWith('court-portal-backup-') && f.endsWith('.sql.gz'))
             .map(f => ({ name: f, time: fs.statSync(path.join(backupDir, f)).mtime.getTime() }))
-            .sort((a, b) => b.time - a.time); // Newest first
+            .sort((a, b) => b.time - a.time);
 
         const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-        
         let removed = 0;
         for (const file of files) {
-            // Keep at least 7 latest backups regardless of age, then delete > 30 days
             if (files.indexOf(file) > 7 && file.time < thirtyDaysAgo) {
                 fs.unlinkSync(path.join(backupDir, file.name));
                 removed++;
             }
         }
-        if (removed > 0) console.log(`🗑️  Rotated ${removed} old backup files.`);
+        if (removed > 0) console.log(`🗑️  Rotated ${removed} backups.`);
         
     } catch (error) {
         console.error('❌ Backup Failed:', error.message);
-        if (error.stderr) console.error('Stderr:', error.stderr);
     }
 }
 

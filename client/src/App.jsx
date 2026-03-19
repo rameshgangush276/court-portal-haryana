@@ -19,6 +19,7 @@ import DevDashboard from './pages/dev/DevDashboard';
 import ResetPasswords from './pages/dev/ResetPasswords';
 import ManageDataTables from './pages/dev/ManageDataTables';
 import ManagePoliceStations from './pages/dev/ManagePoliceStations';
+import SystemManagement from './pages/dev/SystemManagement';
 import StateDashboard from './pages/state/StateDashboard';
 import DistrictDashboard from './pages/district/DistrictDashboard';
 import DataVetting from './pages/district/DataVetting';
@@ -73,6 +74,7 @@ function App() {
             <Route path="/dev/grievances" element={<GrievancesPage />} />
             <Route path="/dev/reports" element={<ReportsPage />} />
             <Route path="/dev/reset-passwords" element={<ResetPasswords />} />
+            <Route path="/dev/system" element={<SystemManagement />} />
             <Route path="/dev/change-password" element={<ChangePassword />} />
           </Route>
 

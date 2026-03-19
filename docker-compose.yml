@@ -23,6 +23,8 @@ services:
       - JWT_SECRET=court-portal-prod-secret-replace-me
       - JWT_REFRESH_SECRET=court-portal-prod-refresh-replace-me
       - NODE_ENV=production
+    volumes:
+      - ./backups:/app/backups
     depends_on:
       - db
 

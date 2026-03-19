@@ -50,12 +50,13 @@ export default function DevDashboard() {
                     <div className="card-title">Quick Actions</div>
                 </div>
                 <div className="flex gap-md" style={{ flexWrap: 'wrap' }}>
-                    <a className="btn btn-secondary" href="/dev/courts">Manage Courts</a>
-                    <a className="btn btn-secondary" href="/dev/magistrates">Manage Judicial Officers</a>
-                    <a className="btn btn-secondary" href="/dev/naib-courts">Manage Naib Courts</a>
-                    <a className="btn btn-secondary" href="/dev/reports">View Reports</a>
-                    <a className="btn btn-danger" href="/dev/reset-passwords">Reset Passwords</a>
-                    <a className="btn btn-secondary" href="/dev/change-password">Change Password</a>
+                    <Link className="btn btn-secondary" to="/dev/courts">Manage Courts</Link>
+                    <Link className="btn btn-secondary" to="/dev/magistrates">Manage Judicial Officers</Link>
+                    <Link className="btn btn-secondary" to="/dev/naib-courts">Manage Naib Courts</Link>
+                    <Link className="btn btn-secondary" to="/dev/reports">View Reports</Link>
+                    <Link className="btn btn-primary" to="/dev/system">📊 Data backup/cleanup</Link>
+                    <Link className="btn btn-danger" to="/dev/reset-passwords">Reset Passwords</Link>
+                    <Link className="btn btn-secondary" to="/dev/change-password">Change Password</Link>
                 </div>
             </div>
         </div>

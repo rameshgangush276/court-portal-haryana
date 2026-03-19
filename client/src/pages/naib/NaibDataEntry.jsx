@@ -182,6 +182,17 @@ export default function NaibDashboard() {
                 return (
                     <input className="form-input" type="date" value={value} onChange={e => setFormValues({ ...formValues, [col.slug]: e.target.value })} />
                 );
+            case 'year':
+                const currentYear = new Date().getFullYear();
+                const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
+                return (
+                    <select className="form-select" value={value} onChange={e => setFormValues({ ...formValues, [col.slug]: e.target.value })}>
+                        <option value="">Select Year...</option>
+                        {years.map(y => (
+                            <option key={y} value={y}>{y}</option>
+                        ))}
+                    </select>
+                );
             case 'boolean':
                 return (
                     <select className="form-select" value={String(value)} onChange={e => setFormValues({ ...formValues, [col.slug]: e.target.value === 'true' })}>

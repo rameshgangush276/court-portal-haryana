@@ -1,6 +1,9 @@
 # Use Node.js as the base image
 FROM node:20-alpine
 
+# Install system dependencies (for DB backup/restore)
+RUN apk add --no-cache postgresql-client gzip
+
 # Set working directory
 WORKDIR /app
 

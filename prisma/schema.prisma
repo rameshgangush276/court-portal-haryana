@@ -252,6 +252,15 @@ enum ColumnDataType {
   text
   number
   date
+  year
   enum
   boolean
+}
+
+model SystemSetting {
+  id    Int    @id @default(autoincrement())
+  key   String @unique @db.VarChar(100)
+  value String
+  
+  @@map("system_settings")
 }

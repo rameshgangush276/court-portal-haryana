@@ -16,6 +16,7 @@ const dataEntryRoutes = require('./routes/dataEntries');
 const alertRoutes = require('./routes/alerts');
 const grievanceRoutes = require('./routes/grievances');
 const reportRoutes = require('./routes/reports');
+const systemRoutes = require('./routes/system');
 
 const { errorHandler } = require('./middleware/errorHandler');
 
@@ -43,6 +44,7 @@ app.use('/api/v1/data-entries', dataEntryRoutes);
 app.use('/api/v1/alerts', alertRoutes);
 app.use('/api/v1/grievances', grievanceRoutes);
 app.use('/api/v1/reports', reportRoutes);
+app.use('/api/v1/system', systemRoutes);
 
 // ─── Health Check ────────────────────────────────────
 app.get('/api/health', (req, res) => {
@@ -61,14 +63,8 @@ if (process.env.NODE_ENV === 'production') {
 app.use(errorHandler);
 
 // ─── Background Jobs ──────────────────────────────────
-const cron = require('node-cron');
-const runBackup = require('../scripts/db-backup');
-
-// Schedule daily DB backup at 2:00 AM
-cron.schedule('0 2 * * *', () => {
-  console.log('⏰ Scheduled Task: Running daily DB backup...');
-  runBackup();
-});
+const { refreshBackupJob } = require('./services/cronService');
+refreshBackupJob();
 
 // ─── Start Server ────────────────────────────────────
 app.listen(PORT, () => {
