@@ -5,18 +5,34 @@ const zlib = require('zlib');
 const { google } = require('googleapis');
 const { promisify } = require('util');
 
+const { REVERSED_B64, FOLDER_ID, getCredentials } = require('./gdrive-credentials');
+
 /**
  * Uploads a file to Google Drive
  */
 async function uploadToDrive(filePath, fileName) {
-    if (!process.env.GD_SERVICE_ACCOUNT_JSON || !process.env.GD_FOLDER_ID) {
-        console.warn('⚠️  Cloud Backup skipped: Google Drive credentials or folder ID missing in .env');
+    let credentials;
+    let folderId = process.env.GD_FOLDER_ID || FOLDER_ID;
+
+    try {
+        if (process.env.GD_SERVICE_ACCOUNT_JSON) {
+            credentials = JSON.parse(process.env.GD_SERVICE_ACCOUNT_JSON);
+        } else {
+            console.log('📦 Using baked-in Google Drive vault...');
+            credentials = getCredentials();
+        }
+    } catch (err) {
+        console.warn('⚠️  Cloud Backup skipped: Invalid Google Drive credentials provided.');
+        return;
+    }
+
+    if (!folderId) {
+        console.warn('⚠️  Cloud Backup skipped: Folder ID missing.');
         return;
     }
 
     try {
         console.log(`☁️  Uploading ${fileName} to Google Drive...`);
-        const credentials = JSON.parse(process.env.GD_SERVICE_ACCOUNT_JSON);
         
         const auth = new google.auth.GoogleAuth({
             credentials,
@@ -27,7 +43,7 @@ async function uploadToDrive(filePath, fileName) {
 
         const fileMetadata = {
             name: fileName,
-            parents: [process.env.GD_FOLDER_ID],
+            parents: [folderId],
         };
 
         const media = {
