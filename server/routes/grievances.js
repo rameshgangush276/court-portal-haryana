@@ -101,14 +101,41 @@ router.post('/:id/comments', authenticate, async (req, res, next) => {
         const { body } = req.body;
         if (!body) return res.status(400).json({ error: 'Comment body is required' });
 
+        const grievanceId = parseInt(req.params.id);
+        const grievance = await prisma.grievance.findUnique({
+            where: { id: grievanceId },
+            select: { raisedBy: true, districtId: true, subject: true }
+        });
+
+        if (!grievance) return res.status(404).json({ error: 'Grievance not found' });
+
         const comment = await prisma.grievanceComment.create({
             data: {
-                grievanceId: parseInt(req.params.id),
+                grievanceId,
                 userId: req.user.id,
                 body,
             },
             include: { user: { select: { id: true, name: true, role: true } } },
         });
+
+        // Generate alert for the raiser if commenter is someone else
+        if (grievance.raisedBy !== req.user.id) {
+            await prisma.alert.create({
+                data: {
+                    districtId: grievance.districtId || req.user.districtId || 1, // Fallback to 1
+                    userId: grievance.raisedBy,
+                    alertType: 'grievance_update',
+                    message: `New comment on grievance: "${grievance.subject}"`,
+                    alertDate: new Date(),
+                    metadata: {
+                        grievanceId,
+                        commentId: comment.id,
+                        commenterName: req.user.name
+                    }
+                }
+            });
+        }
+
         res.status(201).json({ comment });
     } catch (err) { next(err); }
 });

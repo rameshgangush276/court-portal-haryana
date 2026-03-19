@@ -71,6 +71,7 @@ function App() {
             <Route path="/dev/magistrates" element={<ManageMagistrates />} />
             <Route path="/dev/naib-courts" element={<ManageNaibCourts />} />
             <Route path="/dev/data-tables" element={<ManageDataTables />} />
+            <Route path="/dev/alerts" element={<AlertsPage />} />
             <Route path="/dev/grievances" element={<GrievancesPage />} />
             <Route path="/dev/reports" element={<ReportsPage />} />
             <Route path="/dev/reset-passwords" element={<ResetPasswords />} />
@@ -112,6 +113,7 @@ function App() {
             <Route path="/naib/dashboard" element={<NaibDashboard />} />
             <Route path="/naib/select-court" element={<NaibDataEntry />} />
             <Route path="/naib/entry" element={<NaibDataEntry />} />
+            <Route path="/naib/alerts" element={<AlertsPage />} />
             <Route path="/naib/grievances" element={<GrievancesPage />} />
             <Route path="/naib/reports" element={<ReportsPage />} />
             <Route path="/naib/change-password" element={<ChangePassword />} />

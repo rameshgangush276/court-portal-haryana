@@ -26,6 +26,7 @@ export default function Layout() {
                 },
                 {
                     label: t('review'), items: [
+                        { to: '/dev/alerts', icon: '🔔', text: t('alerts') },
                         { to: '/dev/grievances', icon: '🎫', text: t('grievances') },
                         { to: '/dev/reports', icon: '📈', text: t('reports') },
                     ],
@@ -90,6 +91,7 @@ export default function Layout() {
                 },
                 {
                     label: t('other'), items: [
+                        { to: '/naib/alerts', icon: '🔔', text: t('alerts') },
                         { to: '/naib/grievances', icon: '🎫', text: t('grievances') },
                         { to: '/naib/reports', icon: '📈', text: t('reports') },
                     ],

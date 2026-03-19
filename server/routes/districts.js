@@ -4,6 +4,17 @@ const { authenticate, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
 
+// GET /api/v1/districts/all-police-stations
+router.get('/all-police-stations', authenticate, async (req, res, next) => {
+    try {
+        const policeStations = await prisma.policeStation.findMany({
+            include: { district: { select: { name: true } } },
+            orderBy: [{ district: { name: 'asc' } }, { name: 'asc' }],
+        });
+        res.json({ policeStations });
+    } catch (err) { next(err); }
+});
+
 // GET /api/v1/districts
 router.get('/', authenticate, async (req, res, next) => {
     try {

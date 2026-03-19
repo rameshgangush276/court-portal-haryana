@@ -30,10 +30,8 @@ export default function NaibDashboard() {
     useEffect(() => {
         api.get('/courts').then(d => setCourts(d.courts)).catch(console.error);
         api.get('/data-tables').then(d => setTables(d.tables)).catch(console.error);
-        if (user?.districtId) {
-            api.get(`/districts/${user.districtId}/police-stations`).then(d => setPoliceStations(d.policeStations)).catch(console.error);
-        }
-    }, [user?.districtId]);
+        api.get('/districts/all-police-stations').then(d => setPoliceStations(d.policeStations)).catch(console.error);
+    }, []);
 
     // Load entries when court/date/table changes
     useEffect(() => {
@@ -138,8 +136,15 @@ export default function NaibDashboard() {
     const renderField = (col) => {
         const value = (formValues[col.slug] !== undefined && formValues[col.slug] !== null) ? formValues[col.slug] : '';
 
-        // Special handling for Police Station field
+        // Special handling for Police Station field - Group by District
         if (col.slug === 'police_station' && policeStations.length > 0) {
+            const grouped = policeStations.reduce((acc, ps) => {
+                const distName = ps.district?.name || 'Other';
+                if (!acc[distName]) acc[distName] = [];
+                acc[distName].push(ps);
+                return acc;
+            }, {});
+
             return (
                 <select
                     className="form-select"
@@ -147,8 +152,12 @@ export default function NaibDashboard() {
                     onChange={e => setFormValues({ ...formValues, [col.slug]: e.target.value })}
                 >
                     <option value="">Select Police Station...</option>
-                    {policeStations.map(ps => (
-                        <option key={ps.id} value={ps.name}>{ps.name}</option>
+                    {Object.entries(grouped).map(([district, pss]) => (
+                        <optgroup key={district} label={district}>
+                            {pss.map(ps => (
+                                <option key={ps.id} value={ps.name}>{ps.name}</option>
+                            ))}
+                        </optgroup>
                     ))}
                 </select>
             );

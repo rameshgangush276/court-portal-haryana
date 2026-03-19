@@ -82,6 +82,7 @@ model User {
   grievancesAssigned  Grievance[]        @relation("GrievanceAssignedTo")
   grievancesRaised    Grievance[]        @relation("GrievanceRaisedBy")
   transfersMade       TransferLog[]      @relation("TransferredBy")
+  alerts              Alert[]            @relation("UserAlerts")
   district            District?          @relation(fields: [districtId], references: [id])
   lastSelectedCourt   Court?             @relation("LastSelectedCourt", fields: [lastSelectedCourtId], references: [id])
 
@@ -197,6 +198,7 @@ model GrievanceComment {
 model Alert {
   id         Int       @id @default(autoincrement())
   districtId Int       @map("district_id")
+  userId     Int?      @map("user_id")
   alertType  String    @map("alert_type") @db.VarChar(50)
   message    String
   metadata   Json?
@@ -205,6 +207,7 @@ model Alert {
   alertDate  DateTime  @map("alert_date") @db.Date
   createdAt  DateTime  @default(now()) @map("created_at")
   resolvedAt DateTime? @map("resolved_at")
+  user       User?     @relation("UserAlerts", fields: [userId], references: [id])
 
   @@map("alerts")
 }
