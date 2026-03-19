@@ -1,7 +1,7 @@
 const cron = require('node-cron');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-const runBackup = require('../../scripts/db-backup');
+const { runBackup } = require('../../scripts/db-backup');
 
 let backupJob = null;
 
@@ -23,7 +23,7 @@ async function refreshBackupJob() {
         
         backupJob = cron.schedule(cronSchedule, () => {
             console.log(`⏰ [CRON] ${new Date().toLocaleTimeString()}: Triggering Scheduled DB Backup...`);
-            runBackup();
+            runBackup().catch(err => console.error('⏰ [CRON] Scheduled backup failed:', err));
         });
 
         const now = new Date();

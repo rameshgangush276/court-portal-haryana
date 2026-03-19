@@ -35,8 +35,8 @@ export default function SystemManagement() {
         try {
             setLoadingSettings(true);
             const res = await api.get(`/system/settings/backup-time?t=${Date.now()}`);
-            setBackupTime(res.data.value);
-            setServerTime(res.data.serverTime);
+            setBackupTime(res.value);
+            setServerTime(res.serverTime);
         } catch (err) { 
             console.error('Failed to load settings', err);
             // Fallback to local time if API fails for now
@@ -54,7 +54,7 @@ export default function SystemManagement() {
             setError('');
             fetchSettings(); // Refresh server time view
         } catch (err) {
-            setError(err.response?.data?.error || 'Failed to save schedule');
+            setError(err.message || 'Failed to save schedule');
         } finally {
             setSavingTime(false);
         }
@@ -79,10 +79,12 @@ export default function SystemManagement() {
         setError('');
         setSuccess('');
         try {
-            await api.post('/system/backup');
-            setSuccess('Backup created successfully!');
+            const res = await api.post('/system/backup');
+            setSuccess(res.message || 'Backup created successfully!');
             fetchBackups();
-        } catch (err) { setError('Failed to create backup.'); }
+        } catch (err) { 
+            setError(`Error: ${err.message || 'Failed to create backup.'}`); 
+        }
         finally { setLoading(false); }
     };
 
@@ -156,7 +158,7 @@ export default function SystemManagement() {
                                 📦 Create Manual Data Backup
                             </button>
                             <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', background: 'rgba(255,165,0,0.05)', padding: 'var(--space-sm) var(--space-md)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--color-warning)' }}>
-                                Note: Backups are stored in the '/backups' directory.
+                                Note: Backups are stored in the '/backups' directory and Google Drive of courtdataportal@gmail.com.
                             </div>
                         </div>
                     </div>
@@ -208,7 +210,7 @@ export default function SystemManagement() {
                                 <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'center' }}>
                                     <input 
                                         type="time" 
-                                        className="form-control" 
+                                        className="form-input" 
                                         value={backupTime} 
                                         onChange={(e) => setBackupTime(e.target.value)} 
                                         style={{ 

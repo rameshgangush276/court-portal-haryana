@@ -5,7 +5,7 @@ const fs = require('fs');
 const { promisify } = require('util');
 const prisma = require('../lib/prisma');
 const { authenticate, requireRole } = require('../middleware/auth');
-const runBackup = require('../../scripts/db-backup');
+const { runBackup } = require('../../scripts/db-backup');
 
 const execAsync = promisify(exec);
 const { refreshBackupJob } = require('../services/cronService');
@@ -93,8 +93,14 @@ router.get('/backups-list', authenticate, requireRole('developer'), async (req, 
 // Trigger a manual on-demand backup
 router.post('/backup', authenticate, requireRole('developer'), async (req, res, next) => {
     try {
-        await runBackup();
-        res.json({ message: 'Backup created successfully' });
+        const result = await runBackup();
+        if (result.success) {
+            res.json({ 
+                message: `Backup created successfully! ${result.cloudSync ? '☁️ Pushed to Google Drive.' : '⚠️ Local copy only (Cloud sync skipped/failed).'}` 
+            });
+        } else {
+            res.status(500).json({ error: result.error || 'Backup failed' });
+        }
     } catch (err) { next(err); }
 });
 
