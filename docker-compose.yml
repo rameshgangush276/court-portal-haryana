@@ -18,11 +18,9 @@ services:
     restart: always
     ports:
       - "3000:3000"
-    environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/court_portal?schema=public
-      - JWT_SECRET=court-portal-prod-secret-replace-me
-      - JWT_REFRESH_SECRET=court-portal-prod-refresh-replace-me
-      - NODE_ENV=production
+    # Loads DATABASE_URL, JWT secrets, GD_FOLDER_ID, GD_SERVICE_ACCOUNT_JSON from .env (gitignored)
+    env_file:
+      - .env
     volumes:
       - ./backups:/app/backups
     depends_on:
