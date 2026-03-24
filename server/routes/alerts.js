@@ -23,7 +23,11 @@ router.get('/', authenticate, async (req, res, next) => {
                 { userId: req.user.id }
             ];
         } else if (req.user.role === 'state_admin' || req.user.role === 'developer') {
-            // Global roles can filter by district or see all
+            // Global roles see broadcast alerts OR personal alerts
+            where.OR = [
+                { userId: null },
+                { userId: req.user.id }
+            ];
             if (req.query.districtId) where.districtId = parseInt(req.query.districtId);
         }
 
@@ -48,8 +52,10 @@ router.put('/mark-all-read', authenticate, async (req, res, next) => {
                 { userId: req.user.id }
             ];
         } else if (req.user.role === 'state_admin' || req.user.role === 'developer') {
-            // Global roles viewing alerts marks their personal or all alerts they can see as read. 
-            // Depending on scale, we mark all unread alerts in their scope.
+            where.OR = [
+                { userId: null },
+                { userId: req.user.id }
+            ];
         }
 
         const result = await prisma.alert.updateMany({

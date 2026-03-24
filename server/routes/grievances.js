@@ -103,6 +103,28 @@ router.post('/', authenticate, upload.array('files', 5), async (req, res, next) 
                 attachments: true
             }
         });
+
+        // 🚨 Alert the assigned level users about new grievance
+        const targetRole = currentLevel === 'district' ? 'district_admin' : (currentLevel === 'state' ? 'state_admin' : 'developer');
+        let targetUsers = [];
+        if (targetRole === 'district_admin' && req.user.districtId) {
+            targetUsers = await prisma.user.findMany({ where: { role: 'district_admin', districtId: req.user.districtId }, select: { id: true } });
+        } else {
+            targetUsers = await prisma.user.findMany({ where: { role: targetRole }, select: { id: true } });
+        }
+
+        if (targetUsers.length > 0) {
+            const createAlerts = targetUsers.map(u => ({
+                districtId: req.user.districtId || 1,
+                userId: u.id,
+                alertType: 'grievance_update',
+                message: `New Grievance Raised: "${subject}" by ${req.user.name}`,
+                alertDate: new Date(),
+                metadata: { grievanceId: grievance.id }
+            }));
+            await prisma.alert.createMany({ data: createAlerts });
+        }
+
         res.status(201).json({ grievance });
     } catch (err) { next(err); }
 });
@@ -150,7 +172,7 @@ router.post('/:id/comments', authenticate, upload.array('files', 5), async (req,
         const grievanceId = parseInt(req.params.id);
         const grievance = await prisma.grievance.findUnique({
             where: { id: grievanceId },
-            select: { raisedBy: true, districtId: true, subject: true }
+            select: { raisedBy: true, districtId: true, subject: true, currentLevel: true }
         });
 
         if (!grievance) return res.status(404).json({ error: 'Grievance not found' });
@@ -178,22 +200,57 @@ router.post('/:id/comments', authenticate, upload.array('files', 5), async (req,
             },
         });
 
-        // Generate alert for the raiser if commenter is someone else
+        // Determine who gets an alert based on the chain hierarchy
+        const rolesToAlert = ['district_admin'];
+        if (grievance.currentLevel === 'state' || grievance.currentLevel === 'developer') {
+            rolesToAlert.push('state_admin');
+        }
+        if (grievance.currentLevel === 'developer') {
+            rolesToAlert.push('developer');
+        }
+
+        const chainUsers = await prisma.user.findMany({
+            where: { role: { in: rolesToAlert } },
+            select: { id: true, role: true, districtId: true }
+        });
+
+        const userIdsToAlert = new Set();
+        
+        // 1. Notify the original complainant
         if (grievance.raisedBy !== req.user.id) {
-            await prisma.alert.create({
-                data: {
-                    districtId: grievance.districtId || req.user.districtId || 1, // Fallback to 1
-                    userId: grievance.raisedBy,
-                    alertType: 'grievance_update',
-                    message: `New comment on grievance: "${grievance.subject}"`,
-                    alertDate: new Date(),
-                    metadata: {
-                        grievanceId,
-                        commentId: comment.id,
-                        commenterName: req.user.name
-                    }
+            userIdsToAlert.add(grievance.raisedBy);
+        }
+
+        // 2. Notify the chain
+        chainUsers.forEach(u => {
+            if (u.id === req.user.id) return; // exclude commenter
+            
+            if (u.role === 'district_admin') {
+                if (u.districtId === grievance.districtId) {
+                    userIdsToAlert.add(u.id);
                 }
-            });
+            } else {
+                // state_admin or developer
+                userIdsToAlert.add(u.id);
+            }
+        });
+
+        // Generate the discrete alerts
+        if (userIdsToAlert.size > 0) {
+            const newAlerts = Array.from(userIdsToAlert).map(uid => ({
+                districtId: grievance.districtId || 1, // Fallback to 1 if null
+                userId: uid,
+                alertType: 'grievance_update',
+                message: `New comment on grievance: "${grievance.subject}" by ${req.user.name} (${req.user.role.replace('_', ' ')})`,
+                alertDate: new Date(),
+                metadata: {
+                    grievanceId,
+                    commentId: comment.id,
+                    commenterName: req.user.name
+                }
+            }));
+
+            await prisma.alert.createMany({ data: newAlerts });
         }
 
         res.status(201).json({ comment });
@@ -231,6 +288,22 @@ router.post('/:id/escalate', authenticate, requireRole('developer', 'state_admin
                 assignedTo: null,
             },
         });
+
+        // 🚨 Alert the admins corresponding to this new escalated level
+        const alertRole = nextLevel === 'state' ? 'state_admin' : 'developer';
+        const targetUsers = await prisma.user.findMany({ where: { role: alertRole }, select: { id: true } });
+
+        if (targetUsers.length > 0) {
+            const escalationAlerts = targetUsers.map(u => ({
+                districtId: grievance.districtId || 1,
+                userId: u.id,
+                alertType: 'grievance_update',
+                message: `Grievance Escalated to ${nextLevel.toUpperCase()}: "${grievance.subject}"`,
+                alertDate: new Date(),
+                metadata: { grievanceId: grievance.id }
+            }));
+            await prisma.alert.createMany({ data: escalationAlerts });
+        }
 
         res.json({ grievance: updated, message: `Escalated to ${nextLevel} level` });
     } catch (err) { next(err); }
