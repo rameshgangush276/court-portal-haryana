@@ -176,11 +176,27 @@ model Grievance {
   createdAt      DateTime           @default(now()) @map("created_at")
   resolvedAt     DateTime?          @map("resolved_at")
   comments       GrievanceComment[]
+  attachments    GrievanceAttachment[]
   assignedToUser User?              @relation("GrievanceAssignedTo", fields: [assignedTo], references: [id])
   district       District?          @relation(fields: [districtId], references: [id])
   raisedByUser   User               @relation("GrievanceRaisedBy", fields: [raisedBy], references: [id])
 
   @@map("grievances")
+}
+
+model GrievanceAttachment {
+  id          Int       @id @default(autoincrement())
+  grievanceId Int       @map("grievance_id")
+  commentId   Int?      @map("comment_id")
+  fileName    String    @map("file_name") @db.VarChar(255)
+  filePath    String    @map("file_path") @db.VarChar(255)
+  mimeType    String    @map("mime_type") @db.VarChar(100)
+  fileSize    Int       @map("file_size")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  grievance   Grievance @relation(fields: [grievanceId], references: [id], onDelete: Cascade)
+  comment     GrievanceComment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@map("grievance_attachments")
 }
 
 model GrievanceComment {
@@ -191,6 +207,7 @@ model GrievanceComment {
   createdAt   DateTime  @default(now()) @map("created_at")
   grievance   Grievance @relation(fields: [grievanceId], references: [id])
   user        User      @relation(fields: [userId], references: [id])
+  attachments GrievanceAttachment[]
 
   @@map("grievance_comments")
 }

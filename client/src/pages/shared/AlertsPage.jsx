@@ -3,18 +3,29 @@ import api from '../../utils/api';
 
 export default function AlertsPage() {
     const [alerts, setAlerts] = useState([]);
-    const [filter, setFilter] = useState('pending');
+    const [highlightedAlertIds, setHighlightedAlertIds] = useState([]);
 
-    const load = () => {
-        const params = filter === 'pending' ? '?resolved=false' : filter === 'resolved' ? '?resolved=true' : '';
-        api.get(`/alerts${params}`).then(d => setAlerts(d.alerts)).catch(console.error);
-    };
-    useEffect(() => { load(); }, [filter]);
+    const load = async () => {
+        try {
+            const data = await api.get(`/alerts`);
+            const loadedAlerts = data.alerts || [];
+            
+            // Any alert that is currently unresolved is treated as 'new' for this session
+            const newIds = loadedAlerts.filter(a => !a.resolved).map(a => a.id);
+            setHighlightedAlertIds(newIds);
+            setAlerts(loadedAlerts);
 
-    const handleResolve = async (id) => {
-        await api.put(`/alerts/${id}/resolve`);
-        load();
+            // Immediately mark all fetched 'new' alerts as read behind the scenes
+            if (newIds.length > 0) {
+                await api.put(`/alerts/mark-all-read`);
+                window.dispatchEvent(new Event('alertsRead'));
+            }
+        } catch (err) {
+            console.error(err);
+        }
     };
+    
+    useEffect(() => { load(); }, []);
 
     const typeBadge = (type) => {
         const map = { duplicate_entry: 'badge-danger', missing_entry: 'badge-warning' };
@@ -25,38 +36,37 @@ export default function AlertsPage() {
         <div>
             <div className="page-header">
                 <h2>🔔 Alerts</h2>
-                <div className="flex gap-sm">
-                    <button className={`btn btn-sm ${filter === 'pending' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setFilter('pending')}>Pending</button>
-                    <button className={`btn btn-sm ${filter === 'resolved' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setFilter('resolved')}>Resolved</button>
-                    <button className={`btn btn-sm ${filter === 'all' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setFilter('all')}>All</button>
-                </div>
             </div>
 
             {alerts.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-                    {alerts.map(a => (
-                        <div className="card" key={a.id}>
-                            <div className="flex-between">
-                                <div>
-                                    {typeBadge(a.alertType)}
-                                    <div style={{ marginTop: 'var(--space-sm)', fontWeight: 500 }}>{a.message}</div>
-                                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', marginTop: '4px' }}>
-                                        {new Date(a.alertDate).toLocaleDateString('en-IN')}
+                    {alerts.map(a => {
+                        const isNew = highlightedAlertIds.includes(a.id);
+                        return (
+                            <div 
+                                className="card" 
+                                key={a.id} 
+                                style={isNew ? { borderLeft: '4px solid var(--color-primary)', background: 'var(--color-bg-hover)' } : {}}
+                            >
+                                <div className="flex-between">
+                                    <div>
+                                        {typeBadge(a.alertType)}
+                                        {isNew && <span style={{ marginLeft: '8px', fontSize: '10px', color: 'var(--color-primary)', fontWeight: 'bold' }}>NEW</span>}
+                                        <div style={{ marginTop: 'var(--space-sm)', fontWeight: 500 }}>{a.message}</div>
+                                        <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', marginTop: '4px' }}>
+                                            {new Date(a.alertDate).toLocaleDateString('en-IN')}
+                                        </div>
                                     </div>
                                 </div>
-                                {!a.resolved && (
-                                    <button className="btn btn-primary btn-sm" onClick={() => handleResolve(a.id)}>✅ Resolve</button>
-                                )}
-                                {a.resolved && <span className="badge badge-success">Resolved</span>}
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             ) : (
                 <div className="empty-state">
                     <div className="icon">🔔</div>
                     <h3>No alerts</h3>
-                    <p>All clear! No {filter === 'pending' ? 'pending ' : ''}alerts at the moment.</p>
+                    <p>All clear! No alerts at the moment.</p>
                 </div>
             )}
         </div>

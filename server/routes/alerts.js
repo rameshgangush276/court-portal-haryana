@@ -35,6 +35,36 @@ router.get('/', authenticate, async (req, res, next) => {
     } catch (err) { next(err); }
 });
 
+// PUT /api/v1/alerts/mark-all-read
+router.put('/mark-all-read', authenticate, async (req, res, next) => {
+    try {
+        const where = { resolved: false };
+        
+        if (req.user.role === 'naib_court') {
+            where.userId = req.user.id;
+        } else if (req.user.role === 'district_admin') {
+            where.OR = [
+                { districtId: req.user.districtId, userId: null },
+                { userId: req.user.id }
+            ];
+        } else if (req.user.role === 'state_admin' || req.user.role === 'developer') {
+            // Global roles viewing alerts marks their personal or all alerts they can see as read. 
+            // Depending on scale, we mark all unread alerts in their scope.
+        }
+
+        const result = await prisma.alert.updateMany({
+            where,
+            data: {
+                resolved: true,
+                resolvedBy: req.user.id,
+                resolvedAt: new Date(),
+            },
+        });
+        
+        res.json({ success: true, updatedCount: result.count });
+    } catch (err) { next(err); }
+});
+
 // PUT /api/v1/alerts/:id/resolve
 router.put('/:id/resolve', authenticate, async (req, res, next) => {
     try {

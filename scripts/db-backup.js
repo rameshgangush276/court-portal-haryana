@@ -85,13 +85,20 @@ async function runBackup() {
             console.log('📡 Extracting from Local Docker container...');
             dumpStream = spawn('docker', [
                 'exec', '-i', 'courtportalantigravity-db-1', 
-                'sh', '-c', 'PGPASSWORD=password pg_dump -U user --clean --if-exists court_portal'
+                'sh', '-c', 'PGPASSWORD=password pg_dump -U user --clean --if-exists --exclude-table=grievances --exclude-table=grievance_comments --exclude-table=grievance_attachments court_portal'
             ]);
         } 
         // 2. Fallback to pg_dump (Best for Cloud or local with Postgres installed)
         else if (process.env.DATABASE_URL) {
             console.log('📡 Extracting directly from DATABASE_URL using pg_dump...');
-            dumpStream = spawn('pg_dump', [process.env.DATABASE_URL, '--clean', '--if-exists']);
+            dumpStream = spawn('pg_dump', [
+                process.env.DATABASE_URL, 
+                '--clean', 
+                '--if-exists',
+                '--exclude-table=public.grievances',
+                '--exclude-table=public.grievance_comments',
+                '--exclude-table=public.grievance_attachments'
+            ]);
         }
         else {
             throw new Error('No database extraction method available. Ensure Docker is running or DATABASE_URL is set.');

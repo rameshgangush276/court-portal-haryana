@@ -1,8 +1,40 @@
 const express = require('express');
 const prisma = require('../lib/prisma');
 const { authenticate, requireRole } = require('../middleware/auth');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 const router = express.Router();
+
+// Ensure upload directory exists
+const uploadDir = path.join(__dirname, '..', '..', 'uploads', 'grievances');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Configure multer storage
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+const upload = multer({ 
+    storage,
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit per file
+    fileFilter: (req, file, cb) => {
+        // Accept images and pdfs
+        if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
+            cb(null, true);
+        } else {
+            cb(new Error('Invalid file type. Only images and PDFs are allowed.'));
+        }
+    }
+});
 
 // GET /api/v1/grievances
 router.get('/', authenticate, async (req, res, next) => {
@@ -24,6 +56,7 @@ router.get('/', authenticate, async (req, res, next) => {
                 raisedByUser: { select: { id: true, name: true, role: true } },
                 assignedToUser: { select: { id: true, name: true, role: true } },
                 district: { select: { id: true, name: true } },
+                attachments: true,
                 comments: {
                     include: { user: { select: { id: true, name: true, role: true } } },
                     orderBy: { createdAt: 'asc' },
@@ -36,7 +69,7 @@ router.get('/', authenticate, async (req, res, next) => {
 });
 
 // POST /api/v1/grievances
-router.post('/', authenticate, async (req, res, next) => {
+router.post('/', authenticate, upload.array('files', 5), async (req, res, next) => {
     try {
         const { subject, description } = req.body;
         if (!subject || !description) {
@@ -48,6 +81,13 @@ router.post('/', authenticate, async (req, res, next) => {
         if (req.user.role === 'district_admin') currentLevel = 'state';
         if (req.user.role === 'state_admin' || req.user.role === 'developer') currentLevel = 'developer';
 
+        const attachmentData = req.files ? req.files.map(file => ({
+            fileName: file.originalname,
+            filePath: `/uploads/grievances/${file.filename}`,
+            mimeType: file.mimetype,
+            fileSize: file.size,
+        })) : [];
+
         const grievance = await prisma.grievance.create({
             data: {
                 raisedBy: req.user.id,
@@ -55,7 +95,13 @@ router.post('/', authenticate, async (req, res, next) => {
                 description,
                 currentLevel,
                 districtId: req.user.districtId || null,
+                attachments: {
+                    create: attachmentData
+                }
             },
+            include: {
+                attachments: true
+            }
         });
         res.status(201).json({ grievance });
     } catch (err) { next(err); }
@@ -96,7 +142,7 @@ router.put('/:id', authenticate, async (req, res, next) => {
 });
 
 // POST /api/v1/grievances/:id/comments
-router.post('/:id/comments', authenticate, async (req, res, next) => {
+router.post('/:id/comments', authenticate, upload.array('files', 5), async (req, res, next) => {
     try {
         const { body } = req.body;
         if (!body) return res.status(400).json({ error: 'Comment body is required' });
@@ -109,13 +155,27 @@ router.post('/:id/comments', authenticate, async (req, res, next) => {
 
         if (!grievance) return res.status(404).json({ error: 'Grievance not found' });
 
+        const attachmentData = req.files ? req.files.map(file => ({
+            grievanceId,
+            fileName: file.originalname,
+            filePath: `/uploads/grievances/${file.filename}`,
+            mimeType: file.mimetype,
+            fileSize: file.size,
+        })) : [];
+
         const comment = await prisma.grievanceComment.create({
             data: {
                 grievanceId,
                 userId: req.user.id,
                 body,
+                attachments: {
+                    create: attachmentData
+                }
             },
-            include: { user: { select: { id: true, name: true, role: true } } },
+            include: { 
+                user: { select: { id: true, name: true, role: true } },
+                attachments: true
+            },
         });
 
         // Generate alert for the raiser if commenter is someone else

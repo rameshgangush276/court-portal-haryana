@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -9,6 +9,29 @@ export default function Layout() {
     const { lang, toggleLanguage, t } = useLanguage();
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [unreadAlerts, setUnreadAlerts] = useState(0);
+
+    useEffect(() => {
+        if (user) {
+            const checkAlerts = () => {
+                api.get('/alerts?resolved=false').then(res => {
+                    setUnreadAlerts(res.alerts?.length || 0);
+                }).catch(() => {});
+            };
+            checkAlerts();
+            
+            // Listen for cross-component read events strictly for instant UX
+            const handleAlertsRead = () => setUnreadAlerts(0);
+            window.addEventListener('alertsRead', handleAlertsRead);
+
+            // Automatically poll every 60 seconds
+            const interval = setInterval(checkAlerts, 60000);
+            return () => {
+                clearInterval(interval);
+                window.removeEventListener('alertsRead', handleAlertsRead);
+            };
+        }
+    }, [user]);
 
     const navConfig = {
         developer: {
@@ -152,7 +175,21 @@ export default function Layout() {
                                     className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
                                     onClick={() => setSidebarOpen(false)}
                                 >
-                                    <span className="icon">{item.icon}</span>
+                                    <span className="icon" style={{ position: 'relative' }}>
+                                        {item.icon}
+                                        {item.icon === '🔔' && unreadAlerts > 0 && (
+                                            <span style={{
+                                                position: 'absolute', top: '-6px', right: '-8px', 
+                                                background: 'var(--color-danger)', color: 'white', fontSize: '10px', 
+                                                fontWeight: 'bold', borderRadius: '50%', minWidth: '16px', 
+                                                height: '16px', display: 'flex', alignItems: 'center', 
+                                                justifyContent: 'center', padding: '0 4px', pointerEvents: 'none',
+                                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                            }}>
+                                                {unreadAlerts > 99 ? '99+' : unreadAlerts}
+                                            </span>
+                                        )}
+                                    </span>
                                     {item.text}
                                 </NavLink>
                             ))}
@@ -212,7 +249,21 @@ export default function Layout() {
                             to={item.to}
                             className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
                         >
-                            <span className="icon">{item.icon}</span>
+                            <span className="icon" style={{ position: 'relative' }}>
+                                {item.icon}
+                                {item.icon === '🔔' && unreadAlerts > 0 && (
+                                    <span style={{
+                                        position: 'absolute', top: '-6px', right: '-8px', 
+                                        background: 'var(--color-danger)', color: 'white', fontSize: '10px', 
+                                        fontWeight: 'bold', borderRadius: '50%', minWidth: '16px', 
+                                        height: '16px', display: 'flex', alignItems: 'center', 
+                                        justifyContent: 'center', padding: '0 4px', pointerEvents: 'none',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                    }}>
+                                        {unreadAlerts > 99 ? '99+' : unreadAlerts}
+                                    </span>
+                                )}
+                            </span>
                             <span>{item.text}</span>
                         </NavLink>
                     ))}
