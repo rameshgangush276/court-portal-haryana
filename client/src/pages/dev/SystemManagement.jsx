@@ -193,6 +193,22 @@ export default function SystemManagement() {
                             <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', background: 'rgba(255,165,0,0.05)', padding: 'var(--space-sm) var(--space-md)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--color-warning)' }}>
                                 Note: Backups are stored in the '/backups' directory and Google Drive of courtdataportal@gmail.com.
                             </div>
+                            <button 
+                                className="btn btn-secondary btn-sm" 
+                                onClick={async () => {
+                                    if(!window.confirm('Mark sorting of all 17 tables according to the master list?')) return;
+                                    setLoading(true);
+                                    try {
+                                        const res = await api.post('/system/sync-table-sort-order');
+                                        setSuccess(res.message);
+                                    } catch(err) { setError(err.message || 'Sync failed'); }
+                                    finally { setLoading(false); }
+                                }} 
+                                disabled={loading}
+                                style={{ marginTop: 'var(--space-sm)' }}
+                            >
+                                🔄 Sync Tables Sort Order
+                            </button>
                         </div>
                     </div>
 

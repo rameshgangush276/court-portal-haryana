@@ -23,6 +23,8 @@ function validateValues(values, columns) {
             case 'number':
                 if (isNaN(Number(val))) {
                     errors.push(`${col.name} must be a number`);
+                } else if (!Number.isInteger(Number(val))) {
+                    errors.push(`${col.name} must be an integer (no decimals allowed)`);
                 } else if (Number(val) < 0) {
                     errors.push(`${col.name} cannot be negative`);
                 }
@@ -49,7 +51,7 @@ async function checkCourtDateLocked(courtId, dateString) {
     const locked = await prisma.dailySubmission.findFirst({
         where: {
             courtId: parseInt(courtId),
-            entryDate: new Date(dateString)
+            entryDate: new Date(dateString + 'T00:00:00Z') // Ensure strict UTC midnight
         }
     });
     return !!locked;

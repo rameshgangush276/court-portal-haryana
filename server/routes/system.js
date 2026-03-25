@@ -302,4 +302,41 @@ router.post('/finalize-submissions', authenticate, requireRole('developer'), asy
     } catch (err) { next(err); }
 });
 
+// ─── 6. POST /api/v1/system/sync-table-sort-order ──────────────────────────
+// Update table sort orders based on the standard 17-table sequence
+router.post('/sync-table-sort-order', authenticate, requireRole('developer'), async (req, res, next) => {
+    try {
+        const orderMap = {
+            'trials-disposed': 1,
+            'cancellation-decisions': 2,
+            'bail-granted': 3,
+            'po-pp-bj': 4,
+            'sentencing': 5,
+            'deposition-prosecution': 6,
+            'deposition-official': 7,
+            'deposition-medical': 8,
+            'deposition-forensic': 9,
+            'deposition-police': 10,
+            'witnesses-no-appearance': 11,
+            'summons-warrants-served': 12,
+            'summons-warrants-unserved': 13,
+            'nbw-served': 14,
+            'nbw-unserved': 15,
+            'police-applications': 16,
+            'judicial-misconduct': 17
+        };
+
+        let updated = 0;
+        for (const [slug, order] of Object.entries(orderMap)) {
+            const table = await prisma.dataEntryTable.updateMany({
+                where: { slug },
+                data: { sortOrder: order }
+            });
+            updated += table.count;
+        }
+
+        res.json({ message: `Successfully synchronized sort orders for ${updated} tables.` });
+    } catch (err) { next(err); }
+});
+
 module.exports = router;

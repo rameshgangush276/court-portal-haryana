@@ -251,12 +251,16 @@ export default function NaibDashboard() {
                         className="form-input" 
                         type="number" 
                         min="0"
+                        step="1"
                         value={value} 
                         onChange={e => {
                             const val = e.target.value;
-                            if (val !== '' && Number(val) < 0) return; // Prevent negative typing
+                            if (val !== '' && (Number(val) < 0 || !Number.isInteger(Number(val)))) return; 
                             setFormValues({ ...formValues, [col.slug]: val !== '' ? Number(val) : '' });
                         }} 
+                        onKeyDown={(e) => {
+                            if (e.key === '.' || e.key === 'e' || e.key === 'E' || e.key === '+') e.preventDefault();
+                        }}
                     />
                 );
             case 'date':
@@ -322,8 +326,8 @@ export default function NaibDashboard() {
                                     setSuccess('');
                                     setError('');
                                 }}>
-                                    <option value={today}>Today ({today})</option>
-                                    <option value={yesterday}>Yesterday ({yesterday})</option>
+                                    <option value={new Date().toLocaleDateString('en-CA')}>Today ({new Date().toLocaleDateString('en-CA')})</option>
+                                    <option value={new Date(Date.now() - 86400000).toLocaleDateString('en-CA')}>Yesterday ({new Date(Date.now() - 86400000).toLocaleDateString('en-CA')})</option>
                                 </select>
                             </div>
                         </div>
