@@ -255,31 +255,7 @@ router.post('/cleanup', authenticate, requireRole('developer'), async (req, res,
     } catch (err) { next(err); }
 });
 
-// ─── 5. POST /api/v1/system/sync-master-data ──────────────────────────────
-// Force synchronize all 17 tables and their columns with the master list
-router.post('/sync-master-data', authenticate, requireRole('developer'), async (req, res, next) => {
-    try {
-        const { exec } = require('child_process');
-        const path = require('path');
-        
-        // Use npx to run the seed script
-        const seedPath = path.join(__dirname, '..', '..', 'prisma', 'seed.js');
-        
-        exec(`node "${seedPath}"`, (error, stdout, stderr) => {
-            if (error) {
-                console.error(`Seed execution error: ${error}\nStderr: ${stderr}`);
-                return res.status(500).json({ 
-                    error: 'Synchronization Failed', 
-                    message: stderr || error.message,
-                    details: error.toString()
-                });
-            }
-            res.json({ message: 'Master data synchronization completed successfully.', output: stdout });
-        });
-    } catch (err) { next(err); }
-});
-
-// ─── 6. POST /api/v1/system/finalize-submissions ──────────────────────────
+// ─── 5. POST /api/v1/system/finalize-submissions ──────────────────────────
 // Mark data entries as submitted for reports (Developer bypass)
 router.post('/finalize-submissions', authenticate, requireRole('developer'), async (req, res, next) => {
     try {
@@ -326,24 +302,7 @@ router.post('/finalize-submissions', authenticate, requireRole('developer'), asy
     } catch (err) { next(err); }
 });
 
-// ─── 7. POST /api/v1/system/cleanup-decimals ──────────────────────────────
-// Round existing decimal entries to integers
-router.post('/cleanup-decimals', authenticate, requireRole('developer'), async (req, res, next) => {
-    try {
-        const { exec } = require('child_process');
-        const path = require('path');
-        const scriptPath = path.join(__dirname, '..', '..', 'scripts', 'round-decimals.js');
-        
-        exec(`node "${scriptPath}"`, (error, stdout, stderr) => {
-            if (error) {
-                return res.status(500).json({ error: 'Cleanup failed', message: stderr || error.message });
-            }
-            res.json({ message: 'Historical decimal entries rounded successfully.', output: stdout });
-        });
-    } catch (err) { next(err); }
-});
-
-// ─── 8. POST /api/v1/system/sync-table-sort-order ──────────────────────────
+// ─── 6. POST /api/v1/system/sync-table-sort-order ──────────────────────────
 // Update table sort orders based on the standard 17-table sequence
 router.post('/sync-table-sort-order', authenticate, requireRole('developer'), async (req, res, next) => {
     try {

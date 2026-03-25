@@ -1,4 +1,5 @@
 const express = require('express');
+const { Prisma } = require('@prisma/client');
 const prisma = require('../lib/prisma');
 const { authenticate } = require('../middleware/auth');
 const multer = require('multer');
@@ -53,11 +54,11 @@ router.post('/ai-assistant/transcript', authenticate, upload.single('file'), asy
 async function getDbSchema() {
     let schema = '';
     try {
+        const sensitiveTables = ['users', 'system_settings', 'daily_submissions', '_prisma_migrations', 'transfer_logs', 'sessions'];
         const tables = await prisma.$queryRaw`
             SELECT table_name FROM information_schema.tables
-            WHERE table_schema = 'public' 
-              AND table_type = 'BASE TABLE'
-              AND table_name NOT IN ('users', 'system_settings', 'daily_submissions', '_prisma_migrations', 'transfer_logs', 'grievance_attachments', 'grievance_comments')
+            WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+            AND table_name NOT IN (${Prisma.join(sensitiveTables)})
         `;
         for (const t of tables) {
             const name = t.table_name;
@@ -83,32 +84,17 @@ async function getDbSchema() {
 // ── Conversation history (in-memory, per session) ──
 const conversations = new Map();
 
-// ── Global schema cache ──
-let CACHED_SCHEMA = '';
+// ── Build system prompt once at startup ──
+let SYSTEM_PROMPT = '';
 (async () => {
     try {
-        CACHED_SCHEMA = await getDbSchema();
-        console.log('✅ AI schema context loaded (Sensitive tables excluded)');
-    } catch (err) {
-        console.error('Failed to load AI schema:', err);
-    }
-})();
-
-function constructSystemPrompt(user) {
-    const isRestricted = !['developer', 'state_admin', 'viewer_state'].includes(user.role);
-    const districtId = user.districtId;
-
-    return `You are an intelligent database assistant for the Haryana Court Data Portal.
+        const dbSchema = await getDbSchema();
+        SYSTEM_PROMPT = `You are an intelligent database assistant for the Haryana Court Data Portal.
 You help users query and analyze court data using natural language.
 Today's date is ${new Date().toISOString().split('T')[0]}.
 
-USER CONTEXT:
-- Role: ${user.role}
-- District ID: ${districtId || 'All'}
-${isRestricted ? `⚠️ IMPORTANT: You MUST filter every query with 'district_id = ${districtId}'. This user is NOT allowed to see data from other districts.` : ''}
-
-DATABASE SCHEMA:
-${CACHED_SCHEMA}
+Here is the database schema:
+${dbSchema}
 
 IMPORTANT RULES:
 1. When the user asks about data, generate a valid PostgreSQL query.
@@ -117,14 +103,36 @@ IMPORTANT RULES:
   "sql": "YOUR SQL QUERY HERE",
   "explanation": "Brief friendly explanation of what the data shows",
   "visualization": "table" | "bar_chart" | "pie_chart" | "line_chart" | "stat_card" | "map" | "none",
-  "chart_config": { "title": "...", "x_label": "...", "y_label": "...", "label_column": "...", "value_column": "..." }
+  "chart_config": {
+    "title": "Chart Title",
+    "x_label": "X axis label",
+    "y_label": "Y axis label",
+    "label_column": "column_name for labels",
+    "value_column": "column_name for values"
+  }
 }
 3. ONLY use SELECT statements. Never INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE.
-4. Security: Never attempt to join or query the "users" table. It is strictly forbidden.
-5. RBAC: ${isRestricted ? `You MUST include "WHERE district_id = ${districtId}" in your query.` : 'You have access to all districts.'}
-6. For data_entries, use ->> operator for JSONB values.
-7. Always alias aggregate columns clearly.`;
-}
+4. Choose the best visualization:
+   - "stat_card" for single values (counts, averages, sums)
+   - "table" for multi-row, multi-column results
+   - "bar_chart" for category comparisons
+   - "pie_chart" for proportions/percentages
+   - "line_chart" for time-series trends
+   - "map" if user asks for geographic view (query MUST return latitude, longitude columns)
+   - "none" for conversational responses (greetings, help, export questions, etc.)
+5. For non-data questions (greetings, help, export, actions), respond with:
+   { "sql": null, "explanation": "your helpful conversational response", "visualization": "none", "chart_config": null }
+6. Limit results to max 100 rows. For maps max 500.
+7. Use PostgreSQL syntax: ILIKE for case-insensitive search, TO_CHAR/EXTRACT for dates.
+8. Use JOINs when data from multiple tables is needed.
+9. For data_entries, remember the 'values' column is JSONB. Use ->> operator to extract fields.
+   Example: SELECT COUNT(*) as total FROM data_entries e JOIN data_entry_tables t ON e.table_id = t.id WHERE t.name ILIKE '%FIR%';
+10. Always alias aggregate columns (COUNT(*) as count, SUM(...) as total, etc.).`;
+        console.log('✅ AI schema context loaded');
+    } catch (err) {
+        console.error('Failed to load AI schema:', err);
+    }
+})();
 
 // POST /api/v1/reports/ai-assistant/query  (matches replication plan contract)
 router.post('/ai-assistant/query', authenticate, async (req, res, next) => {
@@ -140,7 +148,25 @@ router.post('/ai-assistant/query', authenticate, async (req, res, next) => {
         if (!conversations.has(convId)) conversations.set(convId, []);
         const history = conversations.get(convId);
 
-        let contextPrompt = constructSystemPrompt(req.user) + '\n\n';
+        let contextPrompt = SYSTEM_PROMPT + '\n\n';
+        
+        // ── Role-Based Restrictions ──
+        const userRole = req.user.role;
+        const userDistrictId = req.user.districtId;
+        const userDistrictName = req.user.district?.name || 'your assigned district';
+
+        contextPrompt += `USER CONTEXT:
+- Role: ${userRole}
+- District ID: ${userDistrictId || 'Global Access'}
+- District Name: ${userDistrictName}
+
+IMPORTANT SECURITY ENFORCEMENT for ${userRole}:
+1. DO NOT query any tables related to users, passwords, or authentication.
+2. If role is NOT 'developer' or 'viewer_state', you MUST strictly filter all queries by district_id = ${userDistrictId}.
+3. ONLY provide data relevant to district ${userDistrictName}.
+4. If the user asks for data outside their district, explain politely that you are restricted to their jurisdiction.
+\n`;
+
         const recent = history.slice(-6);
         if (recent.length > 0) {
             contextPrompt += 'Recent conversation:\n';
@@ -172,34 +198,10 @@ router.post('/ai-assistant/query', authenticate, async (req, res, next) => {
         let queryResult = null, error = null;
         if (parsed.sql) {
             try {
-                // 1. Mandatory format & keyword check
                 const sanitized = parsed.sql.trim().toUpperCase();
                 if (!sanitized.startsWith('SELECT') && !sanitized.startsWith('WITH')) {
-                    throw new Error('Only SELECT queries are allowed for security.');
+                    throw new Error('Only SELECT queries are allowed');
                 }
-
-                // 2. Sensitive Table Blacklist check
-                const forbidden = ['users', 'password', 'token', 'settings', 'daily_submission'];
-                if (forbidden.some(f => parsed.sql.toLowerCase().includes(f))) {
-                    return res.json({ 
-                        explanation: "⚠️ Access Denied: This request involves sensitive system data (users/passwords) which I am not permitted to access.",
-                        visualization: "none",
-                        data: null
-                    });
-                }
-
-                // 3. District-Level RBAC Enforcement
-                const isRestricted = !['developer', 'state_admin', 'viewer_state'].includes(req.user.role);
-                const districtId = req.user.districtId;
-                if (isRestricted) {
-                    const sqlLower = parsed.sql.toLowerCase();
-                    // If the user's role is restricted, the query MUST contain their district_id
-                    // This is a simple but effective heuristic for this data model.
-                    if (!sqlLower.includes('district_id') || !sqlLower.includes(String(districtId))) {
-                        throw new Error(`Permission Denied: Your access is restricted to District ID ${districtId}. Please try rephrasing.`);
-                    }
-                }
-
                 const result = await prisma.$queryRawUnsafe(parsed.sql);
                 queryResult = JSON.parse(JSON.stringify(result, (k, v) => typeof v === 'bigint' ? v.toString() : v));
             } catch (dbErr) {

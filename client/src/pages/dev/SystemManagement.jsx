@@ -209,40 +209,6 @@ export default function SystemManagement() {
                             >
                                 🔄 Sync Tables Sort Order
                             </button>
-                            
-                            <button 
-                                className="btn btn-primary btn-sm" 
-                                onClick={async () => {
-                                    if(!window.confirm('WARNING: This will rewrite the catalog of all 17 tables, their names, and columns. Existing data entries will remain, but if names change, they might look different. Continue?')) return;
-                                    setLoading(true);
-                                    try {
-                                        const res = await api.post('/system/sync-master-data');
-                                        setSuccess(res.message);
-                                    } catch(err) { setError(err.message || 'Sync failed'); }
-                                    finally { setLoading(false); }
-                                }} 
-                                disabled={loading}
-                                style={{ marginTop: 'var(--space-sm)', width: '100%', padding: 'var(--space-md)' }}
-                            >
-                                🚀 Sync Full Table Catalog (Schema Refresh)
-                            </button>
-
-                            <button 
-                                className="btn btn-secondary btn-sm" 
-                                onClick={async () => {
-                                    if(!window.confirm('Round all existing decimal entries to the nearest integer? This cannot be undone.')) return;
-                                    setLoading(true);
-                                    try {
-                                        const res = await api.post('/system/cleanup-decimals');
-                                        setSuccess(res.message);
-                                    } catch(err) { setError(err.message || 'Cleanup failed'); }
-                                    finally { setLoading(false); }
-                                }} 
-                                disabled={loading}
-                                style={{ marginTop: 'var(--space-sm)', width: '100%' }}
-                            >
-                                🧹 Round Existing Decimals (Historical Cleanup)
-                            </button>
                         </div>
                     </div>
 
