@@ -255,4 +255,51 @@ router.post('/cleanup', authenticate, requireRole('developer'), async (req, res,
     } catch (err) { next(err); }
 });
 
+// ─── 5. POST /api/v1/system/finalize-submissions ──────────────────────────
+// Mark data entries as submitted for reports (Developer bypass)
+router.post('/finalize-submissions', authenticate, requireRole('developer'), async (req, res, next) => {
+    try {
+        const { districtId, courtId, date } = req.body;
+        
+        let where = {};
+        if (courtId) where.courtId = parseInt(courtId);
+        else if (districtId) where.districtId = parseInt(districtId);
+        
+        if (date) where.entryDate = new Date(date);
+
+        // Find all unique courtId + entryDate pairs that have existing data entries
+        const entries = await prisma.dataEntry.findMany({
+            where,
+            select: { courtId: true, entryDate: true, createdBy: true },
+            distinct: ['courtId', 'entryDate']
+        });
+
+        let createdCount = 0;
+        for (const entry of entries) {
+            await prisma.dailySubmission.upsert({
+                where: {
+                    courtId_entryDate: {
+                        courtId: entry.courtId,
+                        entryDate: entry.entryDate
+                    }
+                },
+                update: {
+                    submittedAt: new Date()
+                },
+                create: {
+                    courtId: entry.courtId,
+                    entryDate: entry.entryDate,
+                    submittedBy: entry.createdBy,
+                    submittedAt: new Date()
+                }
+            });
+            createdCount++;
+        }
+
+        res.json({ 
+            message: `Successfully finalized ${createdCount} reporting days across the selected scope.` 
+        });
+    } catch (err) { next(err); }
+});
+
 module.exports = router;

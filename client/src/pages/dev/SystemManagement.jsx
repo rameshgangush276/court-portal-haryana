@@ -8,6 +8,12 @@ export default function SystemManagement() {
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState('');
     const [error, setError] = useState('');
+    const [courts, setCourts] = useState([]);
+    const [finalSelect, setFinalSelect] = useState({
+        districtId: '',
+        courtId: '',
+        date: ''
+    });
 
     const [backupTime, setBackupTime] = useState('');
     const [serverTime, setServerTime] = useState('');
@@ -85,6 +91,33 @@ export default function SystemManagement() {
         } catch (err) { 
             setError(`Error: ${err.message || 'Failed to create backup.'}`); 
         }
+        finally { setLoading(false); }
+    };
+
+    const fetchCourts = async (dId) => {
+        if (!dId) { setCourts([]); return; }
+        try {
+            const res = await api.get(`/courts?districtId=${dId}`);
+            setCourts(res.courts || []);
+        } catch (err) { console.error('Failed to fetch courts', err); }
+    };
+
+    const handleFinalize = async () => {
+        let sc = '';
+        if (finalSelect.courtId) sc = `Court ${finalSelect.courtId}`;
+        else if (finalSelect.districtId) sc = `District ${finalSelect.districtId}`;
+        else sc = 'Global (ALL Districts)';
+
+        const msg = `⚠️ Bulk Finalization: Mark all existing entries for ${sc} ${finalSelect.date ? `on ${finalSelect.date}` : 'across ALL history'} as "Final Submitted"?`;
+        if (!window.confirm(msg)) return;
+
+        setLoading(true);
+        setError('');
+        setSuccess('');
+        try {
+            const res = await api.post('/system/finalize-submissions', finalSelect);
+            setSuccess(res.message);
+        } catch (err) { setError(err.message || 'Finalization failed'); }
         finally { setLoading(false); }
     };
 
@@ -295,6 +328,61 @@ export default function SystemManagement() {
                                 Full wipe is only available when "Global" is selected.
                             </div>
                         )}
+                    </div>
+
+                    <div className="card" style={{ border: '1px solid var(--color-primary-soft)' }}>
+                        <div className="card-header">
+                            <div className="card-title">🛂 Developer Power: Force Finalize</div>
+                        </div>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-md)' }}>
+                            Instantly mark data as "Submitted" to bypass Naib Court requirements for reports.
+                        </p>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+                            <div>
+                                <label className="form-label" style={{ fontSize: '11px' }}>District</label>
+                                <select 
+                                    className="form-select" 
+                                    value={finalSelect.districtId} 
+                                    onChange={e => {
+                                        const id = e.target.value;
+                                        setFinalSelect({ ...finalSelect, districtId: id, courtId: '' });
+                                        fetchCourts(id);
+                                    }}
+                                >
+                                    <option value="">Global (State Level)</option>
+                                    {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                                </select>
+                            </div>
+
+                            {finalSelect.districtId && (
+                            <div>
+                                <label className="form-label" style={{ fontSize: '11px' }}>Court (Optional)</label>
+                                <select 
+                                    className="form-select" 
+                                    value={finalSelect.courtId} 
+                                    onChange={e => setFinalSelect({ ...finalSelect, courtId: e.target.value })}
+                                >
+                                    <option value="">All Courts in District</option>
+                                    {courts.map(c => <option key={c.id} value={c.id}>Court {c.courtNo} - {c.name}</option>)}
+                                </select>
+                            </div>
+                            )}
+
+                            <div>
+                                <label className="form-label" style={{ fontSize: '11px' }}>Specific Date (Leave blank for ALL history)</label>
+                                <input 
+                                    type="date" 
+                                    className="form-input" 
+                                    value={finalSelect.date}
+                                    onChange={e => setFinalSelect({ ...finalSelect, date: e.target.value })}
+                                />
+                            </div>
+
+                            <button className="btn btn-primary mt-md" onClick={handleFinalize} disabled={loading}>
+                                ✅ Force Mark as Submitted
+                            </button>
+                        </div>
                     </div>
                 </div>
 
