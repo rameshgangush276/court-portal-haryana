@@ -54,7 +54,7 @@ export default function DevDashboard() {
                     <Link className="btn btn-secondary" to="/dev/magistrates">Manage Judicial Officers</Link>
                     <Link className="btn btn-secondary" to="/dev/naib-courts">Manage Naib Courts</Link>
                     <Link className="btn btn-secondary" to="/dev/reports">View Reports</Link>
-                    <Link className="btn btn-primary" to="/dev/system">📊 Data backup/cleanup</Link>
+                    <Link className="btn btn-primary" to="/dev/system">⚙️ System Management</Link>
                     <Link className="btn btn-danger" to="/dev/reset-passwords">Reset Passwords</Link>
                     <Link className="btn btn-secondary" to="/dev/change-password">Change Password</Link>
                 </div>

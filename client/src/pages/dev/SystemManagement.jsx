@@ -208,8 +208,15 @@ export default function SystemManagement() {
         <div>
             <div className="page-header">
                 <h2>⚙️ System Management</h2>
-                <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginTop: 'var(--space-sm)' }}>
-                    Powerful developer tools to maintain the portal. You can manually lock or finalize daily submissions for any specific court or district, create & restore full database backups instantly, reorder reporting tables on the fly without writing code, configure automated daily background backups, and wipe redundant data arrays safely while keeping the core functionality intact.
+                <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginTop: 'var(--space-md)' }}>
+                    <p style={{ marginBottom: '8px' }}><strong>Powerful developer tools to maintain the portal:</strong></p>
+                    <ul style={{ paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <li><strong>Daily Submissions:</strong> Manually lock or finalize data entries for any specific court or district.</li>
+                        <li><strong>Data Backups:</strong> Create and restore full PostgreSQL database backups instantly.</li>
+                        <li><strong>Background Synchronization:</strong> Configure automated daily background Google Drive backups.</li>
+                        <li><strong>Table Configuration:</strong> Reorder reporting tables dynamically without writing code.</li>
+                        <li><strong>Cleanup Options:</strong> Safely wipe redundant data arrays while keeping core functionality intact.</li>
+                    </ul>
                 </div>
             </div>
 
