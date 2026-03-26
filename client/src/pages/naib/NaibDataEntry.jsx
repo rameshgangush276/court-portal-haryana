@@ -95,6 +95,18 @@ export default function NaibDashboard() {
     const handleSave = async () => {
         setError('');
         setSuccess('');
+
+        // Validation for Table 13: Pairvi for private witness
+        if (activeTable?.name?.toLowerCase().includes('pairvi') || Object.keys(formValues).includes('witnesses_prepared')) {
+            const examined = parseFloat(formValues['witnesses_examined'] || 0);
+            const prepared = parseFloat(formValues['witnesses_prepared'] || 0);
+            if (prepared > examined) {
+                setError('Validation Error: Witnesses Prepared to Testify cannot be greater than Witnesses Examined.');
+                window.scrollTo(0, 0);
+                return;
+            }
+        }
+
         try {
             if (editingEntry === 'new') {
                 await api.post('/data-entries', {
