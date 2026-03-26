@@ -224,10 +224,11 @@ export default function SystemManagement() {
             {error && <div className="alert alert-danger mt-lg">{error}</div>}
 
             <div className="grid grid-2 mt-xl" style={{ alignItems: 'start' }}>
-                {/* 1. BACKUP & CLEANUP */}
+                {/* ========================================= COLUMN 1: BACKUPS & RESTORE ========================================= */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xl)' }}>
+                    
                     <div className="card">
-                        <div className="card-header"><div className="card-title">Backups</div></div>
+                        <div className="card-header"><div className="card-title">Manual Data Backup</div></div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
                             <button 
                                 className="btn btn-primary" 
@@ -240,80 +241,6 @@ export default function SystemManagement() {
                             <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', background: 'rgba(255,165,0,0.05)', padding: 'var(--space-sm) var(--space-md)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--color-warning)' }}>
                                 Note: Backups are stored in the '/backups' directory and Google Drive of courtdataportal@gmail.com.
                             </div>
-                            <button 
-                                className="btn btn-secondary btn-sm" 
-                                onClick={async () => {
-                                    if(!window.confirm('Mark sorting of all 17 tables according to the master list?')) return;
-                                    setLoading(true);
-                                    try {
-                                        const res = await api.post('/system/sync-table-sort-order');
-                                        setSuccess(res.message);
-                                    } catch(err) { setError(err.message || 'Sync failed'); }
-                                    finally { setLoading(false); }
-                                }} 
-                                disabled={loading}
-                                style={{ marginTop: 'var(--space-sm)' }}
-                            >
-                                🔄 Sync Tables Sort Order
-                            </button>
-                            <button 
-                                className="btn btn-sm" 
-                                onClick={async () => {
-                                    if(!window.confirm('This will DELETE rogue tables and CREATE the correct 17 tables from the PDF. Continue?')) return;
-                                    setLoading(true);
-                                    try {
-                                        const res = await api.post('/system/fix-tables');
-                                        setSuccess(res.message);
-                                    } catch(err) { setError(err.message || 'Fix failed'); }
-                                    finally { setLoading(false); }
-                                }} 
-                                disabled={loading}
-                                style={{ marginTop: 'var(--space-sm)', background: 'var(--color-danger)', color: 'white', border: 'none' }}
-                            >
-                                🔧 Fix Tables (PDF Compliance)
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="card">
-                        <div className="card-header">
-                            <div className="card-title">Reorder Tables</div>
-                            <button 
-                                className="btn btn-sm" 
-                                onClick={handleSaveTableSort} 
-                                disabled={savingTables || tables.length === 0}
-                            >
-                                {savingTables ? 'Saving...' : '💾 Save Order'}
-                            </button>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                            {tables.map((t, index) => (
-                                <div key={t.id} style={{
-                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
-                                    padding: '0.5rem 1rem', background: 'var(--color-bg-secondary)', 
-                                    borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)'
-                                }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                        <div style={{ minWidth: '2rem', height: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-primary)', color: 'white', borderRadius: '50%', fontWeight: 'bold' }}>
-                                            {index + 1}
-                                        </div>
-                                        <div style={{ fontWeight: 500 }}>{t.name}</div>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '0.25rem' }}>
-                                        <button 
-                                            className="btn btn-sm btn-secondary" 
-                                            onClick={() => handleMoveTable(index, 'up')}
-                                            disabled={index === 0}
-                                        >⬆️</button>
-                                        <button 
-                                            className="btn btn-sm btn-secondary" 
-                                            onClick={() => handleMoveTable(index, 'down')}
-                                            disabled={index === tables.length - 1}
-                                        >⬇️</button>
-                                    </div>
-                                </div>
-                            ))}
-                            {tables.length === 0 && <div className="text-secondary" style={{ padding: '1rem' }}>Loading tables...</div>}
                         </div>
                     </div>
 
@@ -388,6 +315,60 @@ export default function SystemManagement() {
                         </div>
                     </div>
 
+                    <div className="card">
+                        <div className="card-header">
+                            <div className="card-title">Restore from Archive</div>
+                        </div>
+                        {backups.length === 0 ? (
+                            <div style={{ padding: 'var(--space-xl)', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                                No backup files found yet.
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+                                {backups.map(b => (
+                                    <div key={b.name} style={{ 
+                                        display: 'flex', 
+                                        justifyContent: 'space-between', 
+                                        alignItems: 'center', 
+                                        padding: 'var(--space-md)', 
+                                        background: 'var(--color-bg-secondary)', 
+                                        borderRadius: 'var(--radius-md)',
+                                        border: '1px solid var(--color-border)'
+                                    }}>
+                                        <div style={{ overflow: 'hidden' }}>
+                                            <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, textOverflow: 'ellipsis', overflow: 'hidden' }}>{b.name}</div>
+                                            <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
+                                                {(b.size / 1024).toFixed(1)} KB — {new Date(b.createdAt).toLocaleDateString()}
+                                            </div>
+                                        </div>
+                                        <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
+                                            <button 
+                                                className="btn btn-secondary btn-sm" 
+                                                onClick={() => handleRestore(b.name)}
+                                                disabled={loading}
+                                                style={{ fontSize: '11px', padding: '4px 8px' }}
+                                            >
+                                                REVERT ↺
+                                            </button>
+                                            <button 
+                                                className="btn btn-danger btn-sm" 
+                                                onClick={() => handleDeleteBackup(b.name)}
+                                                disabled={loading}
+                                                style={{ fontSize: '11px', padding: '4px 8px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--color-danger)', border: '1px solid rgba(239, 68, 68, 0.3)' }}
+                                            >
+                                                DELETE 🗑️
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* ========================================= COLUMN 2: DATA & TABLES ========================================= */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xl)' }}>
+                    
                     <div className="card" style={{ border: '1px solid rgba(239, 68, 68, 0.3)' }}>
                         <div className="card-header"><div className="card-title" style={{ color: 'var(--color-danger)' }}>💣 Database Cleanup</div></div>
                         
@@ -505,57 +486,82 @@ export default function SystemManagement() {
                             </button>
                         </div>
                     </div>
-                </div>
 
-                {/* 2. RESTORE FROM BACKUP */}
-                <div className="card">
-                    <div className="card-header">
-                        <div className="card-title">Restore from Archive</div>
-                    </div>
-                    {backups.length === 0 ? (
-                        <div style={{ padding: 'var(--space-xl)', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-                            No backup files found yet.
+                    <div className="card">
+                        <div className="card-header">
+                            <div className="card-title">Table Management & Reordering</div>
+                            <button 
+                                className="btn btn-sm" 
+                                onClick={handleSaveTableSort} 
+                                disabled={savingTables || tables.length === 0}
+                            >
+                                {savingTables ? 'Saving...' : '💾 Save Order'}
+                            </button>
                         </div>
-                    ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
-                            {backups.map(b => (
-                                <div key={b.name} style={{ 
-                                    display: 'flex', 
-                                    justifyContent: 'space-between', 
-                                    alignItems: 'center', 
-                                    padding: 'var(--space-md)', 
-                                    background: 'var(--color-bg-secondary)', 
-                                    borderRadius: 'var(--radius-md)',
-                                    border: '1px solid var(--color-border)'
+                        <div style={{ display: 'flex', gap: 'var(--space-sm)', marginBottom: 'var(--space-md)' }}>
+                            <button 
+                                className="btn btn-secondary btn-sm" 
+                                onClick={async () => {
+                                    if(!window.confirm('Mark sorting of all 17 tables according to the master list?')) return;
+                                    setLoading(true);
+                                    try {
+                                        const res = await api.post('/system/sync-table-sort-order');
+                                        setSuccess(res.message);
+                                    } catch(err) { setError(err.message || 'Sync failed'); }
+                                    finally { setLoading(false); }
+                                }} 
+                                disabled={loading}
+                                style={{ flex: 1 }}
+                            >
+                                🔄 Auto-Sync Master Order
+                            </button>
+                            <button 
+                                className="btn btn-sm" 
+                                onClick={async () => {
+                                    if(!window.confirm('This will DELETE rogue tables and CREATE the correct 17 tables from the PDF. Continue?')) return;
+                                    setLoading(true);
+                                    try {
+                                        const res = await api.post('/system/fix-tables');
+                                        setSuccess(res.message);
+                                    } catch(err) { setError(err.message || 'Fix failed'); }
+                                    finally { setLoading(false); }
+                                }} 
+                                disabled={loading}
+                                style={{ flex: 1, background: 'var(--color-danger)', color: 'white', border: 'none' }}
+                            >
+                                🔧 Fix Tables (PDF Compliance)
+                            </button>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            {tables.map((t, index) => (
+                                <div key={t.id} style={{
+                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
+                                    padding: '0.5rem 1rem', background: 'var(--color-bg-secondary)', 
+                                    borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)'
                                 }}>
-                                    <div style={{ overflow: 'hidden' }}>
-                                        <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, textOverflow: 'ellipsis', overflow: 'hidden' }}>{b.name}</div>
-                                        <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
-                                            {(b.size / 1024).toFixed(1)} KB — {new Date(b.createdAt).toLocaleDateString()}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                        <div style={{ minWidth: '2rem', height: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-primary)', color: 'white', borderRadius: '50%', fontWeight: 'bold' }}>
+                                            {index + 1}
                                         </div>
+                                        <div style={{ fontWeight: 500 }}>{t.name}</div>
                                     </div>
-                                    <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
+                                    <div style={{ display: 'flex', gap: '0.25rem' }}>
                                         <button 
-                                            className="btn btn-secondary btn-sm" 
-                                            onClick={() => handleRestore(b.name)}
-                                            disabled={loading}
-                                            style={{ fontSize: '11px', padding: '4px 8px' }}
-                                        >
-                                            REVERT ↺
-                                        </button>
+                                            className="btn btn-sm btn-secondary" 
+                                            onClick={() => handleMoveTable(index, 'up')}
+                                            disabled={index === 0}
+                                        >⬆️</button>
                                         <button 
-                                            className="btn btn-danger btn-sm" 
-                                            onClick={() => handleDeleteBackup(b.name)}
-                                            disabled={loading}
-                                            style={{ fontSize: '11px', padding: '4px 8px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--color-danger)', border: '1px solid rgba(239, 68, 68, 0.3)' }}
-                                        >
-                                            DELETE 🗑️
-                                        </button>
+                                            className="btn btn-sm btn-secondary" 
+                                            onClick={() => handleMoveTable(index, 'down')}
+                                            disabled={index === tables.length - 1}
+                                        >⬇️</button>
                                     </div>
                                 </div>
                             ))}
+                            {tables.length === 0 && <div className="text-secondary" style={{ padding: '1rem' }}>Loading tables...</div>}
                         </div>
-                    )}
+                    </div>
                 </div>
             </div>
         </div>
