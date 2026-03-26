@@ -23,12 +23,12 @@ export default function AiAssistant() {
 
     // ── Suggestions for the welcome screen ──
     const suggestions = [
-        "How many total data entries are there?",
-        "Compare data entries by district",
-        "Show all courts in Ambala",
-        "Total FIR records this month",
-        "List all judicial officers",
-        "Show data entries by table type"
+        "Which district granted the most bail applications this month?",
+        "Show total NBW arrest warrants issued district-wise this week",
+        "How many VC sessions of prisoners were conducted in Ambala last month?",
+        "Compare disposed trials across all districts for this month",
+        "Which courts have the most pending FIR registrations under 156(3)?",
+        "Show total declared POs and PPs district-wise for this year"
     ];
 
     // ── Send message ──
