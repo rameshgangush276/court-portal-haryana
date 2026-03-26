@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../../utils/api';
 
 export default function SystemManagement() {
@@ -6,8 +6,12 @@ export default function SystemManagement() {
     const [districts, setDistricts] = useState([]);
     const [selectedDistrict, setSelectedDistrict] = useState('');
     const [loading, setLoading] = useState(false);
-    const [success, setSuccess] = useState('');
-    const [error, setError] = useState('');
+    const [toast, setToast] = useState(null); // { message, type: 'success'|'error' }
+
+    const showToast = useCallback((message, type = 'success') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 4500);
+    }, []);
     const [courts, setCourts] = useState([]);
     const [finalSelect, setFinalSelect] = useState({
         districtId: '',
@@ -76,15 +80,13 @@ export default function SystemManagement() {
 
     const handleSaveTableSort = async () => {
         setSavingTables(true);
-        setError('');
-        setSuccess('');
         try {
             const updates = tables.map((t, idx) => ({ id: t.id, sortOrder: idx + 1 }));
             const res = await api.post('/system/tables/reorder', { updates });
-            setSuccess(res.message);
-            fetchTables(); // Refresh
+            showToast(res.message);
+            fetchTables();
         } catch (err) {
-            setError(err.message || 'Failed to save sort order');
+            showToast(err.message || 'Failed to save sort order', 'error');
         } finally {
             setSavingTables(false);
         }
@@ -94,11 +96,10 @@ export default function SystemManagement() {
         try {
             setSavingTime(true);
             await api.post('/system/settings/backup-time', { value: backupTime });
-            setSuccess(`Daily backup successfully scheduled for ${backupTime}.`);
-            setError('');
-            fetchSettings(); // Refresh server time view
+            showToast(`Daily backup successfully scheduled for ${backupTime}.`);
+            fetchSettings();
         } catch (err) {
-            setError(err.message || 'Failed to save schedule');
+            showToast(err.message || 'Failed to save schedule', 'error');
         } finally {
             setSavingTime(false);
         }
@@ -120,14 +121,12 @@ export default function SystemManagement() {
 
     const handleBackup = async () => {
         setLoading(true);
-        setError('');
-        setSuccess('');
         try {
             const res = await api.post('/system/backup');
-            setSuccess(res.message || 'Backup created successfully!');
+            showToast(res.message || 'Backup created successfully!');
             fetchBackups();
         } catch (err) { 
-            setError(`Error: ${err.message || 'Failed to create backup.'}`); 
+            showToast(`Error: ${err.message || 'Failed to create backup.'}`, 'error');
         }
         finally { setLoading(false); }
     };
@@ -150,12 +149,10 @@ export default function SystemManagement() {
         if (!window.confirm(msg)) return;
 
         setLoading(true);
-        setError('');
-        setSuccess('');
         try {
             const res = await api.post('/system/finalize-submissions', finalSelect);
-            setSuccess(res.message);
-        } catch (err) { setError(err.message || 'Finalization failed'); }
+            showToast(res.message);
+        } catch (err) { showToast(err.message || 'Finalization failed', 'error'); }
         finally { setLoading(false); }
     };
 
@@ -163,12 +160,10 @@ export default function SystemManagement() {
         if (!window.confirm(`⚠️ DANGER: Restoration will overwrite all current data. Are you sure you want to restore from: ${name}?`)) return;
         
         setLoading(true);
-        setError('');
-        setSuccess('');
         try {
             await api.post('/system/restore', { filename: name });
-            setSuccess(`System successfully restored to backup: ${name}`);
-        } catch (err) { setError('Restore failed. Check if psql is installed.'); }
+            showToast(`System successfully restored to backup: ${name}`);
+        } catch (err) { showToast('Restore failed. Check if psql is installed.', 'error'); }
         finally { setLoading(false); }
     };
 
@@ -181,12 +176,10 @@ export default function SystemManagement() {
         if (!window.confirm(msg)) return;
         
         setLoading(true);
-        setError('');
-        setSuccess('');
         try {
             const d = await api.post('/system/cleanup', { scope, districtId: selectedDistrict });
-            setSuccess(d.message);
-        } catch (err) { setError('Cleanup failed.'); }
+            showToast(d.message);
+        } catch (err) { showToast(err.message || 'Cleanup failed.', 'error'); }
         finally { setLoading(false); }
     };
 
@@ -194,13 +187,11 @@ export default function SystemManagement() {
         if (!window.confirm(`⚠️ PERMANENT DELETE: Are you sure you want to delete ${name}? This cannot be undone.`)) return;
         
         setLoading(true);
-        setError('');
-        setSuccess('');
         try {
             await api.delete(`/system/backups/${name}`);
-            setSuccess(`Backup ${name} deleted successfully.`);
+            showToast(`Backup ${name} deleted successfully.`);
             fetchBackups();
-        } catch (err) { setError('Failed to delete backup.'); }
+        } catch (err) { showToast('Failed to delete backup.', 'error'); }
         finally { setLoading(false); }
     };
 
@@ -220,8 +211,22 @@ export default function SystemManagement() {
                 </div>
             </div>
 
-            {success && <div className="alert alert-success mt-lg">{success}</div>}
-            {error && <div className="alert alert-danger mt-lg">{error}</div>}
+            {/* ── Floating Toast Notification ── */}
+            {toast && (
+                <div style={{
+                    position: 'fixed', bottom: '32px', right: '32px', zIndex: 9999,
+                    background: toast.type === 'error' ? 'var(--color-danger)' : 'var(--color-success)',
+                    color: '#fff', padding: '14px 22px', borderRadius: '10px',
+                    boxShadow: '0 6px 24px rgba(0,0,0,0.25)',
+                    display: 'flex', alignItems: 'center', gap: '10px',
+                    maxWidth: '420px', fontSize: '0.95rem', fontWeight: 500,
+                    animation: 'slideInUp 0.3s ease'
+                }}>
+                    <span style={{ fontSize: '18px' }}>{toast.type === 'error' ? '❌' : '✅'}</span>
+                    <span style={{ flex: 1 }}>{toast.message}</span>
+                    <button onClick={() => setToast(null)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '18px', lineHeight: 1, padding: 0 }}>×</button>
+                </div>
+            )}
 
             <div className="grid grid-2 mt-xl" style={{ alignItems: 'start' }}>
                 {/* ========================================= COLUMN 1: BACKUPS & RESTORE ========================================= */}
@@ -448,9 +453,9 @@ export default function SystemManagement() {
                                 setLoading(true);
                                 try {
                                     const res = await api.post('/system/round-decimals');
-                                    setSuccess(res.message);
+                                    showToast(res.message);
                                 } catch (err) {
-                                    setError(err.message || 'Failed to round decimals');
+                                    showToast(err.message || 'Failed to round decimals', 'error');
                                 } finally {
                                     setLoading(false);
                                 }

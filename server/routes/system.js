@@ -228,9 +228,9 @@ router.post('/cleanup', authenticate, requireRole('developer'), async (req, res,
             msg = `All police stations cleared ${dId ? ` for District ID ${dId}` : ''}.`;
         }
         else if (scope === 'districts_only' && !dId) {
-            // Cannot delete all districts easily without cascade, but we'll try
             await prisma.dataEntry.deleteMany({});
             await prisma.grievance.deleteMany({});
+            await prisma.dailySubmission.deleteMany({});
             await prisma.court.deleteMany({});
             await prisma.magistrate.deleteMany({});
             await prisma.policeStation.deleteMany({});
@@ -242,6 +242,7 @@ router.post('/cleanup', authenticate, requireRole('developer'), async (req, res,
             // Delete in order to satisfy foreign key constraints
             await prisma.dataEntry.deleteMany({});
             await prisma.grievance.deleteMany({});
+            await prisma.dailySubmission.deleteMany({});
             await prisma.user.deleteMany({ where: { role: { not: 'developer' } } });
             await prisma.magistrate.deleteMany({});
             await prisma.court.deleteMany({});
