@@ -489,48 +489,33 @@ export default function SystemManagement() {
 
                     <div className="card">
                         <div className="card-header">
-                            <div className="card-title">Table Management & Reordering</div>
-                            <button 
-                                className="btn btn-sm" 
-                                onClick={handleSaveTableSort} 
-                                disabled={savingTables || tables.length === 0}
-                            >
-                                {savingTables ? 'Saving...' : '💾 Save Order'}
-                            </button>
-                        </div>
-                        <div style={{ display: 'flex', gap: 'var(--space-sm)', marginBottom: 'var(--space-md)' }}>
-                            <button 
-                                className="btn btn-secondary btn-sm" 
-                                onClick={async () => {
-                                    if(!window.confirm('Mark sorting of all 17 tables according to the master list?')) return;
-                                    setLoading(true);
-                                    try {
-                                        const res = await api.post('/system/sync-table-sort-order');
-                                        setSuccess(res.message);
-                                    } catch(err) { setError(err.message || 'Sync failed'); }
-                                    finally { setLoading(false); }
-                                }} 
-                                disabled={loading}
-                                style={{ flex: 1 }}
-                            >
-                                🔄 Auto-Sync Master Order
-                            </button>
-                            <button 
-                                className="btn btn-sm" 
-                                onClick={async () => {
-                                    if(!window.confirm('This will DELETE rogue tables and CREATE the correct 17 tables from the PDF. Continue?')) return;
-                                    setLoading(true);
-                                    try {
-                                        const res = await api.post('/system/fix-tables');
-                                        setSuccess(res.message);
-                                    } catch(err) { setError(err.message || 'Fix failed'); }
-                                    finally { setLoading(false); }
-                                }} 
-                                disabled={loading}
-                                style={{ flex: 1, background: 'var(--color-danger)', color: 'white', border: 'none' }}
-                            >
-                                🔧 Fix Tables (PDF Compliance)
-                            </button>
+                            <div className="card-title">Table Reordering</div>
+                            <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
+                                <button 
+                                    className="btn btn-secondary btn-sm" 
+                                    onClick={async () => {
+                                        if(!window.confirm('Reset all 17 tables to their default sequential order (1–17)?')) return;
+                                        setLoading(true);
+                                        try {
+                                            const res = await api.post('/system/sync-table-sort-order');
+                                            setSuccess(res.message);
+                                            const data = await api.get('/data-tables');
+                                            setTables(data.tables || []);
+                                        } catch(err) { setError(err.message || 'Reset failed'); }
+                                        finally { setLoading(false); }
+                                    }} 
+                                    disabled={loading}
+                                >
+                                    🔃 Reset
+                                </button>
+                                <button 
+                                    className="btn btn-sm" 
+                                    onClick={handleSaveTableSort} 
+                                    disabled={savingTables || tables.length === 0}
+                                >
+                                    {savingTables ? 'Saving...' : '💾 Save Order'}
+                                </button>
+                            </div>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                             {tables.map((t, index) => (

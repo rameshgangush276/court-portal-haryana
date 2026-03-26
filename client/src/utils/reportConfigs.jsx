@@ -105,7 +105,6 @@ export const getTableColumns = (tableSlug) => {
                 }
             ];
         case 'bail-granted':
-        case 'bail-applications-tomorrow':
             return [
                 { header: 'Regular Bail', renderCell: (entries, openModal) => {
                     const subset = filterByRegex(entries, 'bail_type', /regular/i);
@@ -113,6 +112,18 @@ export const getTableColumns = (tableSlug) => {
                 }},
                 { header: 'Interim Bail', renderCell: (entries, openModal) => {
                     const subset = filterByRegex(entries, 'bail_type', /interim/i);
+                    return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
+                }},
+                { header: 'Anticipatory Bail', renderCell: (entries, openModal) => {
+                    const subset = filterByRegex(entries, 'bail_type', /anticipatory/i);
+                    return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
+                }},
+                { header: 'Total', renderCell: (entries, openModal) => <ClickableNum num={entries.length} entries={entries} onClick={openModal} /> }
+            ];
+        case 'bail-applications-tomorrow':
+            return [
+                { header: 'Regular Bail', renderCell: (entries, openModal) => {
+                    const subset = filterByRegex(entries, 'bail_type', /regular/i);
                     return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
                 }},
                 { header: 'Anticipatory Bail', renderCell: (entries, openModal) => {
@@ -219,10 +230,11 @@ export const getTableColumns = (tableSlug) => {
                     return <ClickableNum num={sum} entries={entries} onClick={openModal} />
                 }},
                 { header: '% examined through VC', renderCell: (entries) => {
-                    const sum1 = entries.reduce((acc, e) => acc + parseVal(e.values?.supposed_to_appear), 0);
+                    const sum3 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_physically), 0);
                     const sum4 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_via_vc), 0);
-                    if (sum1 === 0) return <span>0%</span>;
-                    return <span>{((sum4 / sum1) * 100).toFixed(1)}%</span>;
+                    const totalExamined = sum3 + sum4;
+                    if (totalExamined === 0) return <span>0%</span>;
+                    return <span>{((sum4 / totalExamined) * 100).toFixed(1)}%</span>;
                 }},
                 { header: 'Total Examined (Court+VC)', renderCell: (entries) => {
                     const sum3 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_physically), 0);
@@ -251,9 +263,12 @@ export const getTableColumns = (tableSlug) => {
                 }},
                 { header: '% Unauthorized Request', renderCell: (entries) => {
                     const sum1 = entries.reduce((acc, e) => acc + parseVal(e.values?.supposed_to_appear), 0);
+                    const sum2 = entries.reduce((acc, e) => acc + parseVal(e.values?.appeared_physically), 0);
+                    const sum4 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_via_vc), 0);
                     const sum5 = entries.reduce((acc, e) => acc + parseVal(e.values?.absent_unauthorized), 0);
-                    if (sum1 === 0) return <span>0%</span>;
-                    return <span>{((sum5 / sum1) * 100).toFixed(1)}%</span>;
+                    const notAppeared = sum1 - (sum2 + sum4);
+                    if (notAppeared === 0) return <span>0%</span>;
+                    return <span>{((sum5 / notAppeared) * 100).toFixed(1)}%</span>;
                 }}
             ];
         case 'vc-prisoners':

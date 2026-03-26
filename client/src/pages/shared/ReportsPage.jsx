@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
-import * as XLSX from 'xlsx';
+
 import { getTableColumns } from '../../utils/reportConfigs';
 
 export default function ReportsPage() {
@@ -161,28 +161,51 @@ export default function ReportsPage() {
         setModalData({ title, entries });
     };
 
-    const exportToExcel = (tableId, tableName, entries) => {
+    const exportToCSV = (tableId, tableName, entries) => {
         if (!entries || entries.length === 0) return;
         const targetTableDef = tables.find(t => t.id === tableId);
         if (!targetTableDef) return;
 
-        const exportData = entries.map(entry => {
-            const row = {
-                'Date': new Date(entry.entryDate).toLocaleDateString('en-IN'),
-                'District': entry.district?.name || '—',
-                'Court': entry.court?.name || '—',
-            };
-            targetTableDef.columns.forEach(col => {
+        // Build headers
+        const headers = ['Date', 'District', 'Court', ...targetTableDef.columns.map(c => c.name)];
+
+        // Build rows
+        const rows = entries.map(entry => {
+            const baseFields = [
+                new Date(entry.entryDate).toLocaleDateString('en-IN'),
+                entry.district?.name || '—',
+                entry.court?.name || '—',
+            ];
+            const colFields = targetTableDef.columns.map(col => {
                 const val = entry.values?.[col.slug];
-                row[col.name] = (val !== undefined && val !== null) ? val : '—';
+                return (val !== undefined && val !== null) ? String(val) : '—';
             });
-            return row;
+            return [...baseFields, ...colFields];
         });
 
-        const worksheet = XLSX.utils.json_to_sheet(exportData);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Report Data");
-        XLSX.writeFile(workbook, `${tableName}_Report.xlsx`);
+        // Escape a CSV cell (wrap in quotes if it contains comma, quote, or newline)
+        const escapeCell = (cell) => {
+            const str = String(cell);
+            if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                return `"${str.replace(/"/g, '""')}"`;
+            }
+            return str;
+        };
+
+        const csvContent = [
+            headers.map(escapeCell).join(','),
+            ...rows.map(row => row.map(escapeCell).join(','))
+        ].join('\r\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `${tableName}_Report.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     };
 
     return (
@@ -438,13 +461,13 @@ export default function ReportsPage() {
                                 <div key={tableBlock.tableId} className="card mb-xl">
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                                         <h3 className="card-title" style={{ margin: 0, color: 'var(--color-primary)' }}>{tableBlock.tableName}</h3>
-                                        <button className="btn btn-secondary btn-sm" onClick={() => exportToExcel(tableBlock.tableId, tableBlock.tableName, rawEntries)}>
+                                        <button className="btn btn-secondary btn-sm" onClick={() => exportToCSV(tableBlock.tableId, tableBlock.tableName, rawEntries)}>
                                             📥 Export CSV
                                         </button>
                                     </div>
 
-                                    <div className="data-table-wrapper">
-                                        <table className="data-table">
+                                    <div className="data-table-wrapper" style={{ overflowX: 'auto', width: 'fit-content', maxWidth: '100%' }}>
+                                        <table className="data-table" style={{ width: 'auto' }}>
                                             <thead>
                                                 <tr>
                                                     <th>Sr. No.</th>
