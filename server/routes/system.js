@@ -228,6 +228,10 @@ router.post('/cleanup', authenticate, requireRole('developer'), async (req, res,
             msg = `All police stations cleared ${dId ? ` for District ID ${dId}` : ''}.`;
         }
         else if (scope === 'districts_only' && !dId) {
+            await prisma.grievanceAttachment.deleteMany({});
+            await prisma.grievanceComment.deleteMany({});
+            await prisma.alert.deleteMany({});
+            await prisma.transferLog.deleteMany({});
             await prisma.dataEntry.deleteMany({});
             await prisma.grievance.deleteMany({});
             await prisma.dailySubmission.deleteMany({});
@@ -240,6 +244,10 @@ router.post('/cleanup', authenticate, requireRole('developer'), async (req, res,
         }
         else if (scope === 'full_wipe') {
             // Delete in order to satisfy foreign key constraints
+            await prisma.grievanceAttachment.deleteMany({});
+            await prisma.grievanceComment.deleteMany({});
+            await prisma.alert.deleteMany({});
+            await prisma.transferLog.deleteMany({});
             await prisma.dataEntry.deleteMany({});
             await prisma.grievance.deleteMany({});
             await prisma.dailySubmission.deleteMany({});

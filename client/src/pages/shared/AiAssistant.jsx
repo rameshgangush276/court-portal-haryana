@@ -23,12 +23,12 @@ export default function AiAssistant() {
 
     // ── Suggestions for the welcome screen ──
     const suggestions = [
-        "Which district granted the most bail applications this month?",
-        "Show total NBW arrest warrants issued district-wise this week",
-        "How many VC sessions of prisoners were conducted in Ambala last month?",
-        "Compare disposed trials across all districts for this month",
-        "Which courts have the most pending FIR registrations under 156(3)?",
-        "Show total declared POs and PPs district-wise for this year"
+        "Show total accused in custody vs on bail across all districts (Table 1)",
+        "Which courts have the highest pending FIR registrations under 156(3)? (Table 2)",
+        "Summary of POs and PPs declared and arrested this year by district (Table 4)",
+        "List all courts with zero VC sessions conducted last month (Table 11)",
+        "Show percentage of witnesses prepared to testify vs examined (Table 13)",
+        "Top 10 districts by highest recovery of fine in MS cases (Table 17)"
     ];
 
     // ── Send message ──
@@ -127,7 +127,12 @@ export default function AiAssistant() {
     const exportExcel = (data, title, idx) => {
         setExportOpen(null);
         import('xlsx').then(XLSX => {
-            const ws = XLSX.utils.json_to_sheet(data);
+            // Add S.No to the exported data
+            const exportData = data.map((row, i) => ({
+                'S.No': i + 1,
+                ...row
+            }));
+            const ws = XLSX.utils.json_to_sheet(exportData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'AI Result');
             XLSX.writeFile(wb, `${title || 'ai_result'}_${idx + 1}.xlsx`);
@@ -147,11 +152,11 @@ export default function AiAssistant() {
         doc.setFontSize(9);
         doc.setTextColor(120);
         doc.text(`Exported: ${new Date().toLocaleString('en-IN')}`, 14, 27);
-        const headers = Object.keys(data[0]);
+        const headers = ['S.No', ...Object.keys(data[0])];
         doc.autoTable({
             startY: 33,
             head: [headers.map(h => h.replace(/_/g, ' ').toUpperCase())],
-            body: data.map(row => headers.map(h => String(row[h] ?? '—'))),
+            body: data.map((row, i) => [i + 1, ...Object.keys(data[0]).map(h => String(row[h] ?? '—'))]),
             styles: { fontSize: 9, cellPadding: 4 },
             headStyles: { fillColor: [99, 102, 241], textColor: 255, fontStyle: 'bold' },
             alternateRowStyles: { fillColor: [245, 245, 255] },
@@ -367,25 +372,33 @@ function DataTable({ data }) {
     const keys = Object.keys(data[0]);
     return (
         <div style={styles.tableWrapper}>
-            <table style={styles.table}>
-                <thead>
-                    <tr>
-                        {keys.map(k => (
-                            <th key={k} style={styles.th}>{k.replace(/_/g, ' ').toUpperCase()}</th>
-                        ))}
-                    </tr>
-                </thead>
-                <tbody>
-                    {data.slice(0, 100).map((row, i) => (
-                        <tr key={i} style={{ background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)' }}>
-                            {keys.map((k, j) => (
-                                <td key={j} style={styles.td}>{String(row[k] ?? '—')}</td>
+            <div style={{ overflowX: 'auto' }}>
+                <table style={styles.table}>
+                    <thead>
+                        <tr>
+                            <th style={{ ...styles.th, width: '50px', textAlign: 'center' }}>S.No</th>
+                            {keys.map(k => (
+                                <th key={k} style={styles.th}>{k.replace(/_/g, ' ').toUpperCase()}</th>
                             ))}
                         </tr>
-                    ))}
-                </tbody>
-            </table>
-            {data.length > 100 && <div style={styles.tableNote}>Showing first 100 of {data.length} rows</div>}
+                    </thead>
+                    <tbody>
+                        {data.slice(0, 100).map((row, i) => (
+                            <tr key={i} style={{ background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)' }}>
+                                <td style={{ ...styles.td, textAlign: 'center', color: '#64748b', fontWeight: 600 }}>{i + 1}</td>
+                                {keys.map((k, j) => (
+                                    <td key={j} style={styles.td}>{String(row[k] ?? '—')}</td>
+                                ))}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+            <div style={styles.tableNote}>
+                {data.length > 100 
+                    ? `Showing first 100 of ${data.length} total rows` 
+                    : `Total Rows: ${data.length}`}
+            </div>
         </div>
     );
 }
@@ -605,9 +618,10 @@ const styles = {
         borderBottom: '1px solid rgba(148,163,184,0.04)'
     },
     tableNote: {
-        padding: '10px 16px', fontSize: '12px',
-        color: '#64748b', background: '#1a2236',
-        borderTop: '1px solid rgba(148,163,184,0.08)'
+        padding: '12px 16px', fontSize: '12px',
+        color: '#94a3b8', background: '#1a2236',
+        borderTop: '1px solid rgba(148,163,184,0.08)',
+        fontWeight: 600, display: 'flex', justifyContent: 'flex-end'
     },
 
     // Chart

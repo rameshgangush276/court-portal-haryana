@@ -335,6 +335,7 @@ router.post('/generate', authenticate, async (req, res, next) => {
                 table: { select: { id: true, name: true, slug: true, columns: true, singleRow: true } },
                 court: { select: { id: true, name: true, courtNo: true } },
                 district: { select: { id: true, name: true } },
+                // Use select inside include which returns null if user is missing rather than failing the whole row
                 createdByUser: { select: { id: true, name: true } }
             },
             orderBy: [{ entryDate: 'asc' }]
