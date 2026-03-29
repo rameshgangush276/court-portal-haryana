@@ -211,39 +211,7 @@ export default function SystemManagement() {
                 </div>
             </div>
 
-            {/* SYNC STRUCTURE UI */}
-            <div className="card mt-xl" style={{ border: '1px solid var(--color-primary-soft)', background: 'rgba(59, 130, 246, 0.03)' }}>
-                <div className="card-header">
-                    <div className="card-title">💾 Sync Structural Changes to Code</div>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--space-xl)' }}>
-                    <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: '0.9rem', color: 'var(--color-text-primary)', marginBottom: '4px' }}><strong>Make UI changes permanent in source code.</strong></p>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
-                            If you renamed tables or modified columns using the dashboard, click this to overwrite <code>seed.js</code> and <code>system.js</code>. 
-                            This ensures your custom structure survives full database wipes and deployments to new servers.
-                        </p>
-                    </div>
-                    <button 
-                        className="btn btn-primary"
-                        disabled={loading}
-                        onClick={async () => {
-                            if (!window.confirm('⚠️ WARNING: This will overwrite prisma/seed.js and server/routes/system.js with the current live database structure. Continue?')) return;
-                            setLoading(true);
-                            try {
-                                const res = await api.post('/system/sync-to-code');
-                                showToast(res.message);
-                            } catch (err) {
-                                showToast(err.message || 'Sync failed', 'error');
-                            } finally {
-                                setLoading(false);
-                            }
-                        }}
-                    >
-                        🔄 Sync Structure to Code
-                    </button>
-                </div>
-            </div>
+
 
             {/* ── Floating Toast Notification ── */}
             {toast && (

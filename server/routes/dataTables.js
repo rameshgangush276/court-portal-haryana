@@ -1,6 +1,7 @@
 const express = require('express');
 const prisma = require('../lib/prisma');
 const { authenticate, requireRole } = require('../middleware/auth');
+const { syncTableDefinitions } = require('../../scripts/auto-sync');
 
 const router = express.Router();
 
@@ -54,6 +55,8 @@ router.post('/', authenticate, requireRole('developer'), async (req, res, next) 
             },
             include: { columns: true },
         });
+
+        syncTableDefinitions(prisma); // auto-sync (non-blocking)
         res.status(201).json({ table });
     } catch (err) { next(err); }
 });
@@ -71,6 +74,8 @@ router.put('/:id', authenticate, requireRole('developer'), async (req, res, next
             where: { id: parseInt(req.params.id) },
             data,
         });
+
+        syncTableDefinitions(prisma); // auto-sync (non-blocking)
         res.json({ table });
     } catch (err) { next(err); }
 });
@@ -82,6 +87,8 @@ router.delete('/:id', authenticate, requireRole('developer'), async (req, res, n
             where: { id: parseInt(req.params.id) },
             data: { deletedAt: new Date() },
         });
+
+        syncTableDefinitions(prisma); // auto-sync (non-blocking)
         res.json({ message: 'Table deleted' });
     } catch (err) { next(err); }
 });
@@ -107,6 +114,8 @@ router.post('/:id/columns', authenticate, requireRole('developer'), async (req, 
                 sortOrder: sortOrder || 0,
             },
         });
+
+        syncTableDefinitions(prisma); // auto-sync (non-blocking)
         res.status(201).json({ column });
     } catch (err) { next(err); }
 });
@@ -126,6 +135,8 @@ router.put('/:tableId/columns/:colId', authenticate, requireRole('developer'), a
             where: { id: parseInt(req.params.colId) },
             data,
         });
+
+        syncTableDefinitions(prisma); // auto-sync (non-blocking)
         res.json({ column });
     } catch (err) { next(err); }
 });
@@ -137,6 +148,8 @@ router.delete('/:tableId/columns/:colId', authenticate, requireRole('developer')
             where: { id: parseInt(req.params.colId) },
             data: { deletedAt: new Date() },
         });
+
+        syncTableDefinitions(prisma); // auto-sync (non-blocking)
         res.json({ message: 'Column deleted' });
     } catch (err) { next(err); }
 });
