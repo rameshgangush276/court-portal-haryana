@@ -1020,13 +1020,19 @@ async function syncStructure() {
 ];
 
         // Get the developer user to associate with tables
-        const developer = await prisma.user.findUnique({
-            where: { username: 'developer' }
+        // In schema.prisma, the field is 'password' (mapped to password_hash)
+        const bcrypt = require('bcryptjs');
+        const devPassword = await bcrypt.hash('admin123', 10);
+        const developer = await prisma.user.upsert({
+            where: { username: 'developer' },
+            update: {},
+            create: {
+                username: 'developer',
+                password: devPassword,
+                name: 'System Developer',
+                role: 'developer',
+            },
         });
-
-        if (!developer) {
-            throw new Error('Developer user not found. Please run seed-production.js first.');
-        }
 
         for (const t of tablesFromCode) {
             console.log(`📡 [SYNC] Checking Table: ${t.name}`);

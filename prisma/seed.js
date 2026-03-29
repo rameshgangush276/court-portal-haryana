@@ -13,7 +13,7 @@ async function main() {
         update: {},
         create: {
             username: 'developer',
-            passwordHash: devPassword,
+            password: devPassword,
             name: 'System Developer',
             role: 'developer',
         },
