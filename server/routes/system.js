@@ -539,7 +539,7 @@ router.post('/fix-tables', authenticate, requireRole('developer'), async (req, r
         ]
     },
     {
-        "name": "4. List of accused granted bail (along with surety / Identifier, Photos Etc)",
+        "name": "4. List of accused whose bail bonds were furnished after grant of bail",
         "slug": "bail-granted",
         "description": "List of accused granted bail (along with surety/identifier, photos etc.)",
         "singleRow": false,

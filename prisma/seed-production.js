@@ -251,7 +251,7 @@ async function main() {
         ]
     },
     {
-        "name": "4. List of accused granted bail (along with surety / Identifier, Photos Etc)",
+        "name": "4. List of accused whose bail bonds were furnished after grant of bail",
         "slug": "bail-granted",
         "description": "List of accused granted bail (along with surety/identifier, photos etc.)",
         "singleRow": false,
@@ -995,6 +995,7 @@ async function main() {
         ]
     }
 ];
+
 
     console.log('📋 Syncing data entry tables...');
     for (const t of tables) {

@@ -41,14 +41,6 @@ async function main() {
                 "sortOrder": 0
             },
             {
-                "name": "FIR Date",
-                "slug": "fir_date",
-                "dataType": "date",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 1
-            },
-            {
                 "name": "FIR Year",
                 "slug": "fir_year",
                 "dataType": "year",
@@ -96,14 +88,6 @@ async function main() {
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 0
-            },
-            {
-                "name": "FIR Date",
-                "slug": "fir_date",
-                "dataType": "date",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 1
             },
             {
                 "name": "FIR Year",
@@ -192,14 +176,6 @@ async function main() {
                 "sortOrder": 3
             },
             {
-                "name": "Police Station",
-                "slug": "police_station",
-                "dataType": "text",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 3
-            },
-            {
                 "name": "Remarks",
                 "slug": "remarks",
                 "dataType": "text",
@@ -210,7 +186,7 @@ async function main() {
         ]
     },
     {
-        "name": "4. List of accused granted bail (along with surety / Identifier, Photos Etc)",
+        "name": "4. List of accused whose bail bonds were furnished after grant of bail",
         "slug": "bail-granted",
         "description": "List of accused granted bail (along with surety/identifier, photos etc.)",
         "singleRow": false,
@@ -231,14 +207,6 @@ async function main() {
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 1
-            },
-            {
-                "name": "FIR Date",
-                "slug": "fir_date",
-                "dataType": "date",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 2
             },
             {
                 "name": "FIR Year",
@@ -337,14 +305,6 @@ async function main() {
                 "sortOrder": 2
             },
             {
-                "name": "FIR Date",
-                "slug": "fir_date",
-                "dataType": "date",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 2
-            },
-            {
                 "name": "Sections (U/s)",
                 "slug": "sections",
                 "dataType": "text",
@@ -401,14 +361,6 @@ async function main() {
                 "name": "FIR Year",
                 "slug": "fir_year",
                 "dataType": "year",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 2
-            },
-            {
-                "name": "FIR Date",
-                "slug": "fir_date",
-                "dataType": "date",
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 2
@@ -659,7 +611,7 @@ async function main() {
         ]
     },
     {
-        "name": "12. TIPs conducted today",
+        "name": "12. Test Identification Parade of accused persons conducted today",
         "slug": "tips-conducted",
         "description": "TIPs conducted today",
         "singleRow": false,
@@ -677,14 +629,6 @@ async function main() {
                 "name": "FIR Year",
                 "slug": "fir_year",
                 "dataType": "year",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 1
-            },
-            {
-                "name": "FIR Date",
-                "slug": "fir_date",
-                "dataType": "date",
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 1
@@ -764,14 +708,6 @@ async function main() {
                 "sortOrder": 2
             },
             {
-                "name": "FIR Date",
-                "slug": "fir_date",
-                "dataType": "date",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 2
-            },
-            {
                 "name": "Sections (U/s)",
                 "slug": "sections",
                 "dataType": "text",
@@ -832,14 +768,6 @@ async function main() {
                 "sortOrder": 1
             },
             {
-                "name": "FIR Date",
-                "slug": "fir_date",
-                "dataType": "date",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 2
-            },
-            {
                 "name": "FIR Year",
                 "slug": "fir_year",
                 "dataType": "year",
@@ -864,14 +792,6 @@ async function main() {
                 "sortOrder": 4
             },
             {
-                "name": "Escort Guard Name",
-                "slug": "escort_guard_name",
-                "dataType": "text",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 5
-            },
-            {
                 "name": "Accused Status",
                 "slug": "accused_status",
                 "dataType": "enum",
@@ -881,14 +801,6 @@ async function main() {
                 ],
                 "isRequired": true,
                 "sortOrder": 5
-            },
-            {
-                "name": "Escort Guard Mobile",
-                "slug": "escort_guard_mobile",
-                "dataType": "text",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 6
             },
             {
                 "name": "Name of Jail",
@@ -927,14 +839,6 @@ async function main() {
                 "name": "FIR Year",
                 "slug": "fir_year",
                 "dataType": "year",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 2
-            },
-            {
-                "name": "FIR Date",
-                "slug": "fir_date",
-                "dataType": "date",
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 2
