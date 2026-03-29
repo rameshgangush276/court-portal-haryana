@@ -72,10 +72,40 @@ async function runRestore(specificFile = null) {
         fileStream.pipe(gunzip).pipe(restoreProcess.stdin);
 
         await new Promise((resolve, reject) => {
-            restoreProcess.on('close', (code) => {
+            restoreProcess.on('close', async (code) => {
                 if (code === 0) {
-                    console.log('✅ System Restore Successful!');
-                    resolve();
+                    console.log('✅ Base Data Restored. Running Post-Restore Cleanup...');
+                    
+                    // Deduplication & Integrity Check
+                    try {
+                        const { PrismaClient } = require('@prisma/client');
+                        const prisma = new PrismaClient();
+                        
+                        console.log('🔍 Checking for administrative account duplicates...');
+                        // Ensure 'developer' and 'state_admin' remain unique and correct
+                        // This fixes the '2 developer accounts' issue by merging or removing relics
+                        const admins = await prisma.user.findMany({
+                            where: { username: { in: ['developer', 'state_admin'] } },
+                            orderBy: { id: 'desc' } // Keep the newest one if multiple exist
+                        });
+
+                        const seen = new Set();
+                        for (const admin of admins) {
+                            if (seen.has(admin.username)) {
+                                console.log(`🗑️ Removing duplicate ${admin.username} (ID: ${admin.id})`);
+                                await prisma.user.delete({ where: { id: admin.id } });
+                            } else {
+                                seen.add(admin.username);
+                            }
+                        }
+
+                        await prisma.$disconnect();
+                        console.log('✅ System Restore & Deduplication Successful!');
+                        resolve();
+                    } catch (err) {
+                        console.error('⚠️ Post-restore cleanup failed:', err.message);
+                        resolve(); // Still success since base data is back
+                    }
                 } else {
                     reject(new Error(`Restore failed with exit code ${code}`));
                 }

@@ -133,38 +133,8 @@ const zlib = require('zlib');
 const { spawn } = require('child_process');
 
 async function restoreDatabase(backupPath) {
-    const containerName = 'courtportalantigravity-db-1';
-    const isCompressed = backupPath.endsWith('.gz');
-
-    return new Promise((resolve, reject) => {
-        // Prepare the psql process inside Docker
-        const psql = spawn('docker', [
-            'exec', 
-            '-i', 
-            containerName, 
-            'sh', '-c', `PGPASSWORD=password psql -U user -d court_portal`
-        ]);
-
-        let errorOutput = '';
-        psql.stderr.on('data', (data) => { errorOutput += data.toString(); });
-
-        psql.on('exit', (code) => {
-            if (code === 0) resolve();
-            else reject(new Error(`Restore process exited with code ${code}: ${errorOutput}`));
-        });
-
-        // ─── Stream the file into psql's stdin ───────────────────────────
-        const fileStream = fs.createReadStream(backupPath);
-        
-        if (isCompressed) {
-            const gunzip = zlib.createGunzip();
-            fileStream.pipe(gunzip).pipe(psql.stdin);
-        } else {
-            fileStream.pipe(psql.stdin);
-        }
-
-        fileStream.on('error', reject);
-    });
+    const { runRestore } = require('../../scripts/db-restore');
+    return runRestore(backupPath);
 }
 
 // ─── 3. POST /api/v1/system/restore ────────────────────────────────────────
@@ -251,12 +221,19 @@ router.post('/cleanup', authenticate, requireRole('developer'), async (req, res,
             await prisma.dataEntry.deleteMany({});
             await prisma.grievance.deleteMany({});
             await prisma.dailySubmission.deleteMany({});
-            await prisma.user.deleteMany({ where: { role: { not: 'developer' } } });
+            
+            // SECURITY: Never delete 'developer' or 'state_admin'
+            await prisma.user.deleteMany({ 
+                where: { 
+                    role: { notIn: ['developer', 'state_admin'] } 
+                } 
+            });
+
             await prisma.magistrate.deleteMany({});
             await prisma.court.deleteMany({});
             await prisma.policeStation.deleteMany({});
             await prisma.district.deleteMany({});
-            msg = 'Full database cleanup complete (only Developer account remains).';
+            msg = 'Full database cleanup complete. Core system accounts (Developer/State Admin) preserved.';
         }
 
         if (msg) return res.json({ message: msg });
