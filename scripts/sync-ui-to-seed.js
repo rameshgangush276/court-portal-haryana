@@ -64,6 +64,27 @@ async function sync() {
             console.error('   ❌ Could not find Table markers in seed-production.js');
         }
 
+        // 1.5 Sync Data Entry Tables to server/routes/system.js
+        console.log('   - Fetching DataEntryTables to sync with system.js...');
+        const systemFilePath = path.join(rootDir, 'server/routes/system.js');
+        if (fs.existsSync(systemFilePath)) {
+            let systemContent = fs.readFileSync(systemFilePath, 'utf8');
+            const systemStartMarker = 'const tables = [';
+            const systemFollowMarker = '    console.log(\'📋 Syncing data entry tables...\');';
+            
+            const sysStartIndex = systemContent.indexOf(systemStartMarker);
+            const sysFollowIndex = systemContent.indexOf(systemFollowMarker);
+
+            if (sysStartIndex !== -1 && sysFollowIndex !== -1) {
+                const newSysTablesArray = `const tables = ${tablesJs};\n\n    `;
+                systemContent = systemContent.substring(0, sysStartIndex) + newSysTablesArray + systemContent.substring(sysFollowIndex);
+                fs.writeFileSync(systemFilePath, systemContent);
+                console.log('   ✅ server/routes/system.js (Tables) updated.');
+            } else {
+                console.error('   ❌ Could not find Table markers in server/routes/system.js');
+            }
+        }
+
         // 2. Sync Police Stations to Disrtrict_PS.csv
         console.log('   - Fetching Districts and Police Stations...');
         const districts = await prisma.district.findMany({
