@@ -1064,7 +1064,7 @@ async function main() {
         update: {},
         create: {
             username: 'state_admin',
-            passwordHash: stateAdminPassword,
+            password: stateAdminPassword,
             name: 'State Administrator',
             role: 'state_admin',
         },
