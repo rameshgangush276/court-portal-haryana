@@ -240,14 +240,6 @@ module.exports = [
                 "sortOrder": 7
             },
             {
-                "name": "Father's Name of Surety",
-                "slug": "surety_father_name",
-                "dataType": "text",
-                "enumOptions": null,
-                "isRequired": false,
-                "sortOrder": 8
-            },
-            {
                 "name": "Address of Surety",
                 "slug": "surety_address",
                 "dataType": "text",
@@ -688,7 +680,7 @@ module.exports = [
         ]
     },
     {
-        "name": "14. Any Gangster/Notorious Criminal appearing in Court the next day",
+        "name": "14. Any Gangster/Notorious Criminal physically appearing in Court the next day",
         "slug": "gangster-next-day",
         "description": "Any Gangster/Notorious Criminal appearing in Court the next day",
         "singleRow": false,
@@ -756,7 +748,7 @@ module.exports = [
         ]
     },
     {
-        "name": "15. Any Crime against Property offender appearing in court the next day",
+        "name": "15. Any Crime against Property offender physically appearing in court the next day",
         "slug": "property-offender-next-day",
         "description": "Any Crime against Property offender appearing in court the next day",
         "singleRow": false,
