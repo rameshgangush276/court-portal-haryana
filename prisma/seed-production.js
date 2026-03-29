@@ -267,7 +267,7 @@ async function main() {
             sortOrder: 13,
             columns: [
                 { name: 'Witnesses Examined', slug: 'witnesses_examined', dataType: 'number', sortOrder: 0 },
-                { name: 'Witnesses Prepared to Testify', slug: 'witnesses_prepared', dataType: 'number', sortOrder: 1 },
+                { name: 'Witness prepared out of witness examined', slug: 'witnesses_prepared', dataType: 'number', sortOrder: 1 },
             ],
         },
         {
