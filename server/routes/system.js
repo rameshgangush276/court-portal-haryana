@@ -394,14 +394,6 @@ router.post('/fix-tables', authenticate, requireRole('developer'), async (req, r
                 "sortOrder": 0
             },
             {
-                "name": "FIR Date",
-                "slug": "fir_date",
-                "dataType": "date",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 1
-            },
-            {
                 "name": "FIR Year",
                 "slug": "fir_year",
                 "dataType": "year",
@@ -449,14 +441,6 @@ router.post('/fix-tables', authenticate, requireRole('developer'), async (req, r
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 0
-            },
-            {
-                "name": "FIR Date",
-                "slug": "fir_date",
-                "dataType": "date",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 1
             },
             {
                 "name": "FIR Year",
@@ -545,14 +529,6 @@ router.post('/fix-tables', authenticate, requireRole('developer'), async (req, r
                 "sortOrder": 3
             },
             {
-                "name": "Police Station",
-                "slug": "police_station",
-                "dataType": "text",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 3
-            },
-            {
                 "name": "Remarks",
                 "slug": "remarks",
                 "dataType": "text",
@@ -584,14 +560,6 @@ router.post('/fix-tables', authenticate, requireRole('developer'), async (req, r
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 1
-            },
-            {
-                "name": "FIR Date",
-                "slug": "fir_date",
-                "dataType": "date",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 2
             },
             {
                 "name": "FIR Year",
@@ -690,14 +658,6 @@ router.post('/fix-tables', authenticate, requireRole('developer'), async (req, r
                 "sortOrder": 2
             },
             {
-                "name": "FIR Date",
-                "slug": "fir_date",
-                "dataType": "date",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 2
-            },
-            {
                 "name": "Sections (U/s)",
                 "slug": "sections",
                 "dataType": "text",
@@ -754,14 +714,6 @@ router.post('/fix-tables', authenticate, requireRole('developer'), async (req, r
                 "name": "FIR Year",
                 "slug": "fir_year",
                 "dataType": "year",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 2
-            },
-            {
-                "name": "FIR Date",
-                "slug": "fir_date",
-                "dataType": "date",
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 2
@@ -1012,7 +964,7 @@ router.post('/fix-tables', authenticate, requireRole('developer'), async (req, r
         ]
     },
     {
-        "name": "12. TIPs conducted today",
+        "name": "12. Test Identification Parade of accused persons conducted today",
         "slug": "tips-conducted",
         "description": "TIPs conducted today",
         "singleRow": false,
@@ -1030,14 +982,6 @@ router.post('/fix-tables', authenticate, requireRole('developer'), async (req, r
                 "name": "FIR Year",
                 "slug": "fir_year",
                 "dataType": "year",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 1
-            },
-            {
-                "name": "FIR Date",
-                "slug": "fir_date",
-                "dataType": "date",
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 1
@@ -1117,14 +1061,6 @@ router.post('/fix-tables', authenticate, requireRole('developer'), async (req, r
                 "sortOrder": 2
             },
             {
-                "name": "FIR Date",
-                "slug": "fir_date",
-                "dataType": "date",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 2
-            },
-            {
                 "name": "Sections (U/s)",
                 "slug": "sections",
                 "dataType": "text",
@@ -1185,14 +1121,6 @@ router.post('/fix-tables', authenticate, requireRole('developer'), async (req, r
                 "sortOrder": 1
             },
             {
-                "name": "FIR Date",
-                "slug": "fir_date",
-                "dataType": "date",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 2
-            },
-            {
                 "name": "FIR Year",
                 "slug": "fir_year",
                 "dataType": "year",
@@ -1217,14 +1145,6 @@ router.post('/fix-tables', authenticate, requireRole('developer'), async (req, r
                 "sortOrder": 4
             },
             {
-                "name": "Escort Guard Name",
-                "slug": "escort_guard_name",
-                "dataType": "text",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 5
-            },
-            {
                 "name": "Accused Status",
                 "slug": "accused_status",
                 "dataType": "enum",
@@ -1234,14 +1154,6 @@ router.post('/fix-tables', authenticate, requireRole('developer'), async (req, r
                 ],
                 "isRequired": true,
                 "sortOrder": 5
-            },
-            {
-                "name": "Escort Guard Mobile",
-                "slug": "escort_guard_mobile",
-                "dataType": "text",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 6
             },
             {
                 "name": "Name of Jail",
@@ -1280,14 +1192,6 @@ router.post('/fix-tables', authenticate, requireRole('developer'), async (req, r
                 "name": "FIR Year",
                 "slug": "fir_year",
                 "dataType": "year",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 2
-            },
-            {
-                "name": "FIR Date",
-                "slug": "fir_date",
-                "dataType": "date",
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 2
@@ -1504,6 +1408,7 @@ router.post('/sync-to-code', authenticate, requireRole('developer'), async (req,
 
         // Path definitions
         const seedPath = path.join(__dirname, '../../prisma/seed.js');
+        const seedProdPath = path.join(__dirname, '../../prisma/seed-production.js');
         const systemPath = path.join(__dirname, '../../server/routes/system.js');
 
         // 1. Update seed.js
@@ -1524,7 +1429,27 @@ router.post('/sync-to-code', authenticate, requireRole('developer'), async (req,
             }
         }
 
-        // 2. Update system.js (this file)
+        // 2. Update seed-production.js
+        if (fs.existsSync(seedProdPath)) {
+            let seedProdContent = fs.readFileSync(seedProdPath, 'utf8');
+            const startMarker = '// ─── 17 Predefined Data Entry Tables ───────────────\n    const tables = ';
+            const endMarker = '\n\n    console.log(\'📋 Syncing data entry tables...\');';
+            
+            const startIdx = seedProdContent.indexOf(startMarker);
+            const endIdx = seedProdContent.indexOf(endMarker);
+
+            if (startIdx !== -1 && endIdx !== -1) {
+                const newContent = seedProdContent.substring(0, startIdx + startMarker.length)
+                                 + jsonString
+                                 + seedProdContent.substring(endIdx);
+                fs.writeFileSync(seedProdPath, newContent);
+                console.log('✅ Updated prisma/seed-production.js');
+            } else {
+                console.warn('⚠️ Could not find markers in seed-production.js — skipping.');
+            }
+        }
+
+        // 3. Update system.js (this file)
         if (fs.existsSync(systemPath)) {
             let sysContent = fs.readFileSync(systemPath, 'utf8');
             const startMarker = '// The 12 correct tables from the PDF that may be missing\n        const allTables = ';
@@ -1542,7 +1467,7 @@ router.post('/sync-to-code', authenticate, requireRole('developer'), async (req,
             }
         }
 
-        res.json({ message: 'Structural changes successfully exported to seed.js and system.js code files.' });
+        res.json({ message: 'Structural changes successfully exported to seed.js, seed-production.js and system.js.' });
     } catch (err) { 
         console.error('❌ Sync failed:', err);
         next(err); 
