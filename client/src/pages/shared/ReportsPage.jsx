@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
+import { useLanguage } from '../../context/LanguageContext';
 
 import { getTableColumns } from '../../utils/reportConfigs';
 
 export default function ReportsPage() {
     const { user } = useAuth();
+    const { t, tTable, tColumn, lang } = useLanguage();
     const [mode, setMode] = useState('district-court-wise'); // "district-court-wise", "date-wise", "pending-entries"
     
     // District / Court
@@ -358,7 +360,7 @@ export default function ReportsPage() {
                     {/* District / Scope Selection (State Level) */}
                     {isStateLevel && (
                         <div className="form-group" style={{ gridColumn: '1 / -1', background: 'var(--color-surface-hover)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', marginBottom: '16px' }}>
-                            <label className="form-label" style={{ display: 'block', marginBottom: '12px', fontWeight: '600' }}>Report Scope</label>
+                            <label className="form-label" style={{ display: 'block', marginBottom: '12px', fontWeight: '600' }}>{t('reportScope')}</label>
                             <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
                                 <div className="btn-group" style={{ display: 'flex', background: 'var(--color-surface)', padding: '4px', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
                                     <button 
@@ -520,7 +522,7 @@ export default function ReportsPage() {
                                         onChange={() => handleTableToggle(t.id)} 
                                         style={{ width: '16px', height: '16px' }}
                                     />
-                                    {t.name}
+                                    {tTable(t.slug, t.name)}
                                 </label>
                             ))}
                         </div>

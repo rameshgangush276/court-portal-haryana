@@ -1,12 +1,13 @@
 export const ClickableNum = ({ num, entries, onClick }) => {
     if (!num || num === '0' || num === 0) return <span>0</span>;
+    const displayVal = typeof num === 'number' ? num.toLocaleString('en-IN') : num;
     return (
         <span 
             onClick={() => onClick(entries)}
             style={{ color: 'var(--color-primary)', textDecoration: 'underline', cursor: 'pointer', fontWeight: 'bold' }}
             title="Click to view underlying entries"
         >
-            {num}
+            {displayVal}
         </span>
     );
 };
@@ -134,16 +135,12 @@ export const getTableColumns = (tableSlug) => {
             ];
         case 'po-pp-bj':
             return [
-                { header: 'POs', renderCell: (entries, openModal) => {
-                    const subset = filterByRegex(entries, 'declaration_type', /^po$/i);
-                    return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
-                }},
-                { header: 'PPs', renderCell: (entries, openModal) => {
-                    const subset = filterByRegex(entries, 'declaration_type', /^pp$/i);
+                { header: 'PO/PP', renderCell: (entries, openModal) => {
+                    const subset = filterByRegex(entries, 'declaration_type', /PO\/PP/i);
                     return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
                 }},
                 { header: 'Bail Jumpers', renderCell: (entries, openModal) => {
-                    const subset = filterByRegex(entries, 'declaration_type', /jump/i);
+                    const subset = filterByRegex(entries, 'declaration_type', /BJ/i);
                     return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
                 }},
                 { header: 'Total', renderCell: (entries, openModal) => <ClickableNum num={entries.length} entries={entries} onClick={openModal} /> }

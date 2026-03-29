@@ -232,11 +232,11 @@ module.exports = [
                 "sortOrder": 6
             },
             {
-                "name": "Name of Identifier",
-                "slug": "identifier_name",
+                "name": "Father's Name of Surety",
+                "slug": "surety_father_name",
                 "dataType": "text",
                 "enumOptions": null,
-                "isRequired": true,
+                "isRequired": false,
                 "sortOrder": 7
             },
             {
@@ -245,7 +245,7 @@ module.exports = [
                 "dataType": "text",
                 "enumOptions": null,
                 "isRequired": false,
-                "sortOrder": 9
+                "sortOrder": 8
             },
             {
                 "name": "Mobile No. of Surety",
@@ -253,7 +253,31 @@ module.exports = [
                 "dataType": "text",
                 "enumOptions": null,
                 "isRequired": false,
+                "sortOrder": 9
+            },
+            {
+                "name": "Name of Identifier",
+                "slug": "identifier_name",
+                "dataType": "text",
+                "enumOptions": null,
+                "isRequired": true,
                 "sortOrder": 10
+            },
+            {
+                "name": "Father's Name of Identifier",
+                "slug": "identifier_father_name",
+                "dataType": "text",
+                "enumOptions": null,
+                "isRequired": false,
+                "sortOrder": 11
+            },
+            {
+                "name": "Address of Identifier",
+                "slug": "identifier_address",
+                "dataType": "text",
+                "enumOptions": null,
+                "isRequired": false,
+                "sortOrder": 12
             },
             {
                 "name": "Mobile No. of Identifier",
@@ -261,7 +285,7 @@ module.exports = [
                 "dataType": "text",
                 "enumOptions": null,
                 "isRequired": false,
-                "sortOrder": 11
+                "sortOrder": 13
             },
             {
                 "name": "Photo Taken",
@@ -272,7 +296,7 @@ module.exports = [
                     "No"
                 ],
                 "isRequired": true,
-                "sortOrder": 12
+                "sortOrder": 14
             }
         ]
     },
@@ -328,8 +352,7 @@ module.exports = [
                 "slug": "declaration_type",
                 "dataType": "enum",
                 "enumOptions": [
-                    "PO",
-                    "PP",
+                    "PO/PP",
                     "BJ"
                 ],
                 "isRequired": true,

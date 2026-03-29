@@ -3,26 +3,26 @@
 /* ─── CSS Variables (Design Tokens) ─────────────────── */
 :root {
   /* Colors */
-  --color-bg: #0f1117;
-  --color-bg-secondary: #1a1d27;
-  --color-bg-card: #1e2130;
-  --color-bg-hover: #252838;
-  --color-bg-input: #161822;
-  --color-border: #2a2d3a;
+  --color-bg: #0b0d12; /* Deeper black for higher contrast with text */
+  --color-bg-secondary: #161922;
+  --color-bg-card: #1c1f2b;
+  --color-bg-hover: #2a2f3f;
+  --color-bg-input: #0f1118;
+  --color-border: #2d3348;
   --color-border-focus: #6366f1;
 
-  --color-primary: #6366f1;
-  --color-primary-hover: #818cf8;
-  --color-primary-soft: rgba(99, 102, 241, 0.15);
-  --color-secondary: #06b6d4;
-  --color-success: #22c55e;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
-  --color-danger-soft: rgba(239, 68, 68, 0.15);
+  --color-primary: #818cf8; /* Brighter Indigo */
+  --color-primary-hover: #a5b4fc;
+  --color-primary-soft: rgba(129, 140, 248, 0.15);
+  --color-secondary: #22d3ee;
+  --color-success: #34d399; /* Punchier Green */
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  --color-danger-soft: rgba(248, 113, 113, 0.15);
 
-  --color-text: #e2e8f0;
-  --color-text-secondary: #94a3b8;
-  --color-text-muted: #64748b;
+  --color-text: #ffffff; /* pure white for maximum visibility */
+  --color-text-secondary: #e2e8f0; /* brighter secondary text */
+  --color-text-muted: #94a3b8;
 
   /* Typography */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;

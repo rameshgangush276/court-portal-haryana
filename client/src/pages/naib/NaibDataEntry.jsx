@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
+import { useLanguage } from '../../context/LanguageContext';
 
-export default function NaibDashboard() {
+export default function NaibDataEntry() {
     const { user, refreshUser } = useAuth();
+    const { t, tTable, tColumn } = useLanguage();
     const location = useLocation();
     const navigate = useNavigate();
     const isSelectCourtPage = location.pathname.includes('select-court');
@@ -48,8 +50,8 @@ export default function NaibDashboard() {
         if (selectedCourt && selectedDate) {
             const params = `?courtId=${selectedCourt}&entryDate=${selectedDate}`;
             api.get(`/data-entries/summary${params}`)
-               .then(d => setFinalSubmitted(d.isLocked || false))
-               .catch(console.error);
+                .then(d => setFinalSubmitted(d.isLocked || false))
+                .catch(console.error);
         }
     }, [selectedCourt, selectedDate]);
 
@@ -67,8 +69,8 @@ export default function NaibDashboard() {
     const handleCourtSelect = async (courtId) => {
         setSelectedCourt(courtId);
         if (courtId) {
-            try { 
-                await api.post('/data-entries/select-court', { courtId: parseInt(courtId) }); 
+            try {
+                await api.post('/data-entries/select-court', { courtId: parseInt(courtId) });
                 await refreshUser(); // Update global state
             }
             catch (err) { console.error(err); }
@@ -167,10 +169,10 @@ export default function NaibDashboard() {
         try {
             await api.post('/data-entries/submit-day', { courtId: selectedCourt, entryDate: selectedDate });
             setFinalSubmitted(true);
-            navigate('/naib/dashboard', { 
-                state: { successMessage: `All data for ${selectedDate} has been submitted successfully! The calendar is now locked.` } 
+            navigate('/naib/dashboard', {
+                state: { successMessage: `All data for ${selectedDate} has been submitted successfully! The calendar is now locked.` }
             });
-        } catch(err) {
+        } catch (err) {
             setError(err.error || err.message || 'Error occurred');
         }
     };
@@ -182,7 +184,7 @@ export default function NaibDashboard() {
         if (col.slug === 'police_station' && policeStations.length > 0) {
             const homeDistrictId = user?.districtId;
             const homeDistrictPS = policeStations.filter(ps => ps.districtId === homeDistrictId);
-            
+
             // If the currently selected PS is from another district, we need to keep it in the list so it's visible
             const currentSelectedPS = policeStations.find(ps => ps.name === value);
             const isExternalSelected = currentSelectedPS && currentSelectedPS.districtId !== homeDistrictId;
@@ -216,7 +218,7 @@ export default function NaibDashboard() {
                         }}
                     >
                         <option value="">Select Police Station...</option>
-                        
+
                         {!showOtherDistricts ? (
                             <>
                                 {homeDistrictPS.map(ps => (
@@ -251,30 +253,45 @@ export default function NaibDashboard() {
             case 'enum':
                 return (
                     <select className="form-select" value={value} onChange={e => setFormValues({ ...formValues, [col.slug]: e.target.value })}>
-                        <option value="">Select...</option>
+                        <option value="">{t('select')}</option>
                         {(col.enumOptions || []).map(opt => (
-                            <option key={opt} value={opt}>{opt}</option>
+                            <option key={opt} value={opt}>{t(opt) || opt}</option>
                         ))}
                     </select>
                 );
-            case 'number':
+            case 'number': {
+                // Display with Indian comma formatting (e.g. 10,00,000)
+                // formValues stores the raw number; displayValue shows formatted string
+                const rawNum = value === '' || value === undefined ? '' : value;
+                const formatIndian = (n) => {
+                    if (n === '' || n === null || n === undefined) return '';
+                    return Number(n).toLocaleString('en-IN');
+                };
                 return (
-                    <input 
-                        className="form-input" 
-                        type="number" 
-                        min="0"
-                        step="1"
-                        value={value} 
+                    <input
+                        className="form-input"
+                        type="text"
+                        inputMode="numeric"
+                        value={rawNum === '' ? '' : formatIndian(rawNum)}
                         onChange={e => {
-                            const val = e.target.value;
-                            if (val !== '' && (Number(val) < 0 || !Number.isInteger(Number(val)))) return; 
-                            setFormValues({ ...formValues, [col.slug]: val !== '' ? Number(val) : '' });
-                        }} 
-                        onKeyDown={(e) => {
-                            if (e.key === '.' || e.key === 'e' || e.key === 'E' || e.key === '+') e.preventDefault();
+                            // Strip all commas and non-digits
+                            const stripped = e.target.value.replace(/,/g, '').replace(/[^0-9]/g, '');
+                            const num = stripped === '' ? '' : parseInt(stripped, 10);
+                            setFormValues({ ...formValues, [col.slug]: num });
                         }}
+                        onKeyDown={e => {
+                            // Allow: backspace, delete, tab, arrows, digits
+                            const allowed = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
+                            if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) {
+                                e.preventDefault();
+                            }
+                        }}
+                        placeholder="0"
+                        style={{ textAlign: 'right' }}
                     />
                 );
+            }
+
             case 'date':
                 return (
                     <input className="form-input" type="date" value={value} onChange={e => setFormValues({ ...formValues, [col.slug]: e.target.value })} />
@@ -293,9 +310,9 @@ export default function NaibDashboard() {
             case 'boolean':
                 return (
                     <select className="form-select" value={String(value)} onChange={e => setFormValues({ ...formValues, [col.slug]: e.target.value === 'true' })}>
-                        <option value="">Select...</option>
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
+                        <option value="">{t('select')}</option>
+                        <option value="true">{t('yes') || 'Yes'}</option>
+                        <option value="false">{t('no') || 'No'}</option>
                     </select>
                 );
             default:
@@ -409,10 +426,10 @@ export default function NaibDashboard() {
                                                         <td style={isEmpty ? { fontWeight: 600, color: 'var(--color-danger)' } : {}}>{row.tableName}</td>
                                                         <td style={{ textAlign: 'center' }}>
                                                             {row.singleRow ? (
-                                                                <span style={{ 
-                                                                    padding: '4px 12px', 
-                                                                    borderRadius: '20px', 
-                                                                    fontSize: '12px', 
+                                                                <span style={{
+                                                                    padding: '4px 12px',
+                                                                    borderRadius: '20px',
+                                                                    fontSize: '12px',
                                                                     background: isEmpty ? 'var(--color-danger-soft)' : 'var(--color-success-soft)',
                                                                     color: isEmpty ? 'var(--color-danger)' : 'var(--color-success)',
                                                                     fontWeight: 700
@@ -420,7 +437,7 @@ export default function NaibDashboard() {
                                                                     {isEmpty ? '❌ NO' : '✅ YES'}
                                                                 </span>
                                                             ) : (
-                                                                <span style={{ 
+                                                                <span style={{
                                                                     fontWeight: 700,
                                                                     color: isEmpty ? 'var(--color-danger)' : 'var(--color-text)'
                                                                 }}>
@@ -434,17 +451,17 @@ export default function NaibDashboard() {
                                         </tbody>
                                     </table>
                                 </div>
-                                
+
                                 <div className="alert alert-info mb-xl">
-                                    <strong>Note:</strong> Please ensure all tables marked in red (0 entries) are either intentionally left blank or filled before final submission.
+                                    <strong>{t('note')}</strong> {t('ensureFilled')}
                                 </div>
 
-                                <button 
-                                    className="btn btn-primary" 
+                                <button
+                                    className="btn btn-primary"
                                     onClick={handleFinalSubmit}
                                     style={{ width: '100%', padding: '1rem', fontSize: '1.1rem', background: 'var(--color-success)', borderColor: 'var(--color-success)' }}
                                 >
-                                    🚀 Final Submit Data to District Admin
+                                    🚀 {t('finalSubmit')}
                                 </button>
                             </>
                         )}
@@ -481,7 +498,7 @@ export default function NaibDashboard() {
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)', marginBottom: 'var(--space-xl)' }}>
                             <div style={{ marginBottom: 'var(--space-sm)', fontWeight: 600, color: 'var(--color-text-secondary)' }}>
-                                Select a table below:
+                                {t('selectATable')}
                             </div>
                             {tables.map(t => (
                                 <button
@@ -513,10 +530,10 @@ export default function NaibDashboard() {
                                     }}>
                                         {tables.indexOf(t) + 1}
                                     </span>
-                                    {t.name}
+                                    {tTable(t.slug, t.name)}
                                 </button>
                             ))}
-                            
+
                             {!finalSubmitted && (
                                 <button
                                     className="btn btn-primary"
@@ -530,7 +547,7 @@ export default function NaibDashboard() {
                                         fontWeight: 700
                                     }}
                                 >
-                                    ✅ Review Before Final Submit
+                                    ✅ {t('reviewBeforeSubmit')}
                                 </button>
                             )}
                         </div>
@@ -543,9 +560,9 @@ export default function NaibDashboard() {
                                 className="btn btn-secondary btn-sm"
                                 onClick={() => { setActiveTable(null); setEditingEntry(null); setError(''); setSuccess(''); }}
                             >
-                                ← Back
+                                ← {t('back')}
                             </button>
-                            <h2 style={{ margin: 0, fontSize: '1.25rem', lineHeight: 1.2 }}>{activeTable.name}</h2>
+                            <h2 style={{ margin: 0, fontSize: '1.25rem', lineHeight: 1.2 }}>{tTable(activeTable.slug, activeTable.name)}</h2>
                         </div>
 
                         <div className="card mb-xl" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
@@ -562,20 +579,20 @@ export default function NaibDashboard() {
                         {/* Entry Form */}
                         {editingEntry !== null && (
                             <div className="card mb-xl">
-                                <h3 className="card-title mb-lg">{editingEntry === 'new' ? 'New Entry' : 'Edit Entry'}</h3>
+                                <h3 className="card-title mb-lg">{editingEntry === 'new' ? t('newEntry') : t('editEntry')}</h3>
                                 <div className="form-row">
                                     {activeTable.columns.map(col => (
                                         <div className="form-group" key={col.id}>
                                             <label className="form-label">
-                                                {col.name} {col.isRequired && <span className="text-danger">*</span>}
+                                                {tColumn(col.slug, col.name)} {col.isRequired && <span className="text-danger">*</span>}
                                             </label>
                                             {renderField(col)}
                                         </div>
                                     ))}
                                 </div>
                                 <div className="flex gap-md">
-                                    <button className="btn btn-primary" onClick={handleSave}>💾 Save</button>
-                                    <button className="btn btn-secondary" onClick={() => setEditingEntry(null)}>Cancel</button>
+                                    <button className="btn btn-primary" onClick={handleSave}>💾 {t('saveEntry')}</button>
+                                    <button className="btn btn-secondary" onClick={() => setEditingEntry(null)}>{t('cancel')}</button>
                                 </div>
                             </div>
                         )}
@@ -585,15 +602,15 @@ export default function NaibDashboard() {
                             <div className="mb-lg">
                                 {finalSubmitted ? (
                                     <div className="alert alert-success" style={{ padding: 'var(--space-md)', borderRadius: 'var(--radius-md)', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                                        🔒 Data finalized and locked for {selectedDate}.
+                                        🔒 {t('dataLocked')} {selectedDate}.
                                     </div>
                                 ) : (
                                     <>
                                         {!(activeTable.singleRow && entries.length > 0) && (
-                                            <button className="btn btn-primary" onClick={handleNewEntry}>+ Add Entry</button>
+                                            <button className="btn btn-primary" onClick={handleNewEntry}>{t('addEntry')}</button>
                                         )}
                                         {activeTable.singleRow && entries.length > 0 && (
-                                            <button className="btn btn-primary" onClick={() => handleEditEntry(entries[0])}>✏️ Edit Entry</button>
+                                            <button className="btn btn-primary" onClick={() => handleEditEntry(entries[0])}>✏️ {t('editEntry')}</button>
                                         )}
                                     </>
                                 )}
@@ -610,19 +627,29 @@ export default function NaibDashboard() {
                                             <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
                                                 {!finalSubmitted && (
                                                     <>
-                                                        <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={() => handleEditEntry(entry)}>✏️ Edit</button>
-                                                        <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '12px', color: 'var(--color-danger)', borderColor: 'var(--color-danger-soft)', background: 'var(--color-danger-soft)' }} onClick={() => handleDeleteEntry(entry.id)}>🗑️ Delete</button>
+                                                        <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={() => handleEditEntry(entry)}>✏️ {t('edit')}</button>
+                                                        <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '12px', color: 'var(--color-danger)', borderColor: 'var(--color-danger-soft)', background: 'var(--color-danger-soft)' }} onClick={() => handleDeleteEntry(entry.id)}>🗑️ {t('delete')}</button>
                                                     </>
                                                 )}
                                             </div>
                                         </div>
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 'var(--space-sm)', fontSize: 'var(--font-size-sm)' }}>
-                                            {activeTable.columns.map(col => (
-                                                <div key={col.id}>
-                                                    <div style={{ color: 'var(--color-text-secondary)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{col.name}</div>
-                                                    <div style={{ fontWeight: 500 }}>{entry.values?.[col.slug] ?? '—'}</div>
-                                                </div>
-                                            ))}
+                                            {activeTable.columns.map(col => {
+                                                const rawVal = entry.values?.[col.slug];
+                                                const displayVal = (rawVal === undefined || rawVal === null || rawVal === '')
+                                                    ? '—'
+                                                    : col.dataType === 'number'
+                                                        ? Number(rawVal).toLocaleString('en-IN')
+                                                        : (col.dataType === 'enum' || col.dataType === 'boolean')
+                                                            ? t(String(rawVal)) || rawVal
+                                                            : rawVal;
+                                                return (
+                                                    <div key={col.id}>
+                                                        <div style={{ color: 'var(--color-text-secondary)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{tColumn(col.slug, col.name)}</div>
+                                                        <div style={{ fontWeight: 500, textAlign: col.dataType === 'number' ? 'right' : 'left' }}>{displayVal}</div>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                 ))}
@@ -632,8 +659,8 @@ export default function NaibDashboard() {
                         {entries.length === 0 && editingEntry === null && (
                             <div className="empty-state">
                                 <div className="icon">📋</div>
-                                <h3>No entries yet</h3>
-                                <p>Click "Add Entry" to start filling data for this table</p>
+                                <h3>{t('noEntries')}</h3>
+                                <p>{t('addEntryStart')}</p>
                             </div>
                         )}
                     </>

@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function NaibDashboard() {
     const { user } = useAuth();
+    const { t, tTable } = useLanguage();
     const location = useLocation();
     const [stats, setStats] = useState(null);
     const [summary, setSummary] = useState([]);
@@ -49,7 +51,7 @@ export default function NaibDashboard() {
 
     return (
         <div>
-            <div className="page-header"><h2>Naib Court Dashboard</h2></div>
+            <div className="page-header"><h2>{t('naibDashboard')}</h2></div>
 
             {location.state?.successMessage && (
                 <div style={{ background: 'rgba(34,197,94,0.15)', color: 'var(--color-success)', padding: 'var(--space-md) var(--space-lg)', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-lg)', fontSize: 'var(--font-size-sm)', textAlign: 'center' }}>
@@ -59,33 +61,33 @@ export default function NaibDashboard() {
             )}
 
             <div style={{ background: 'var(--color-bg-secondary)', padding: 'var(--space-lg)', borderRadius: 'var(--radius-lg)', marginBottom: 'var(--space-xl)', border: '1px solid var(--color-border)' }}>
-                <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}>Welcome, <strong>{user?.name}</strong> • {user?.district?.name} District</p>
+                <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}>{t('welcome')} <strong>{user?.name}</strong> • {user?.district?.name} {t('district')}</p>
                 {user?.lastSelectedCourtId ? (
                     <div style={{ marginTop: 'var(--space-sm)', color: 'var(--color-success)', fontWeight: 600 }}>
-                        📍 Reporting for: {stats?.selectedCourt || 'Selected Court'}
+                        📍 {t('reportingFor')} {stats?.selectedCourt || t('selectedCourt')}
                         {isLocked && <span style={{ marginLeft: 'var(--space-sm)', background: 'var(--color-success-soft)', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', border: '1px solid var(--color-success)' }}>🔒 Locked for {activeDate}</span>}
                     </div>
                 ) : (
-                    <div style={{ marginTop: 'var(--space-sm)', color: 'var(--color-warning)', fontWeight: 600 }}>⚠️ No court selected. Please select a court to start reporting.</div>
+                    <div style={{ marginTop: 'var(--space-sm)', color: 'var(--color-warning)', fontWeight: 600 }}>⚠️ {t('noCourtSelected')}</div>
                 )}
             </div>
 
             <div className="stat-cards">
                 <Link to="/naib/entry" className="stat-card" style={{ borderLeft: '4px solid var(--color-primary)' }}>
                     <div className="stat-value">{totalTables}</div>
-                    <div className="stat-label">Total Tables</div>
+                    <div className="stat-label">{t('totalTables')}</div>
                 </Link>
                 <Link to="/naib/entry" className="stat-card" style={{ borderLeft: '4px solid var(--color-success)' }}>
                     <div className="stat-value">{filledTables}</div>
-                    <div className="stat-label">Filled Tables</div>
+                    <div className="stat-label">{t('filledTables')}</div>
                 </Link>
                 <Link to="/naib/entry" className="stat-card" style={{ borderLeft: '4px solid var(--color-danger)' }}>
                     <div className="stat-value">{nilTables}</div>
-                    <div className="stat-label">Nil Entry Tables</div>
+                    <div className="stat-label">{t('nilTables')}</div>
                 </Link>
                 <Link to="/naib/grievances" className="stat-card" style={{ borderLeft: '4px solid var(--color-warning)' }}>
                     <div className="stat-value">{stats?.grievances ?? '—'}</div>
-                    <div className="stat-label">Open Grievances</div>
+                    <div className="stat-label">{t('openTickets')}</div>
                 </Link>
             </div>
 
@@ -106,7 +108,7 @@ export default function NaibDashboard() {
                                     borderRadius: 'var(--radius-md)',
                                     border: '1px solid var(--color-border)'
                                 }}>
-                                    <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 500 }}>{s.tableName}</span>
+                                    <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 500 }}>{tTable(s.tableSlug, s.tableName)}</span>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
                                         <span style={{ fontSize: 'var(--font-size-xs)', color: s.count > 0 ? 'var(--color-success)' : 'var(--color-text-muted)' }}>
                                             {s.singleRow ? (s.count > 0 ? 'Completed' : 'Pending') : `${s.count} Entries`}
@@ -129,13 +131,13 @@ export default function NaibDashboard() {
                 </div>
 
                 <div className="card">
-                    <div className="card-header"><div className="card-title">Quick Actions</div></div>
+                    <div className="card-header"><div className="card-title">{t('quickActions')}</div></div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-                        <Link className="btn btn-primary" to="/naib/entry" style={{ justifyContent: 'start' }}>📝 Go to Data Entry</Link>
-                        <Link className="btn btn-secondary" to="/naib/select-court" style={{ justifyContent: 'start' }}>⚖️ Change Selected Court</Link>
-                        <Link className="btn btn-secondary" to="/naib/reports" style={{ justifyContent: 'start' }}>📊 View Past Reports</Link>
-                        <Link className="btn btn-secondary" to="/naib/grievances" style={{ justifyContent: 'start' }}>🎫 Manage Grievances</Link>
-                        <Link className="btn btn-secondary" to="/naib/change-password" style={{ justifyContent: 'start' }}>🔑 Change Password</Link>
+                        <Link className="btn btn-primary" to="/naib/entry" style={{ justifyContent: 'start' }}>📝 {t('goToDataEntry')}</Link>
+                        <Link className="btn btn-secondary" to="/naib/select-court" style={{ justifyContent: 'start' }}>⚖️ {t('changeSelectedCourt')}</Link>
+                        <Link className="btn btn-secondary" to="/naib/reports" style={{ justifyContent: 'start' }}>📊 {t('viewPastReports')}</Link>
+                        <Link className="btn btn-secondary" to="/naib/grievances" style={{ justifyContent: 'start' }}>🎫 {t('manageGrievances')}</Link>
+                        <Link className="btn btn-secondary" to="/naib/change-password" style={{ justifyContent: 'start' }}>🔑 {t('changePassword')}</Link>
                     </div>
                 </div>
             </div>

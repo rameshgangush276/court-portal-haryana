@@ -19,8 +19,24 @@ export function LanguageProvider({ children }) {
         return translations[lang][key] || key;
     };
 
+    /**
+     * Translates a table name by its slug.
+     * Falls back to the provided default name (English).
+     */
+    const tTable = (slug, defaultName) => {
+        return translations[lang][slug] || defaultName;
+    };
+
+    /**
+     * Translates a column heading by its slug.
+     * Falls back to the provided default name (English).
+     */
+    const tColumn = (slug, defaultName) => {
+        return translations[lang][slug] || defaultName;
+    };
+
     return (
-        <LanguageContext.Provider value={{ lang, toggleLanguage, t }}>
+        <LanguageContext.Provider value={{ lang, toggleLanguage, t, tTable, tColumn }}>
             {children}
         </LanguageContext.Provider>
     );
